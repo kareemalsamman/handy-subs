@@ -98,30 +98,31 @@ export const AddUserDialog = ({ open, onOpenChange, onSuccess }: AddUserDialogPr
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+          <DialogTitle className="text-2xl font-bold text-foreground">
             Add New User
           </DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label htmlFor="username">Username *</Label>
+            <Label htmlFor="username" className="text-sm font-semibold">Username *</Label>
             <Input
               id="username"
               value={formData.username}
               onChange={(e) => setFormData({ ...formData, username: e.target.value })}
               placeholder="Enter username"
+              className="mt-1"
               required
             />
           </div>
 
           <div>
-            <Label htmlFor="company">Company *</Label>
+            <Label htmlFor="company" className="text-sm font-semibold">Company *</Label>
             <Select value={formData.company} onValueChange={(value) => setFormData({ ...formData, company: value })}>
-              <SelectTrigger>
+              <SelectTrigger className="mt-1">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-popover z-50">
                 <SelectItem value="Ajad">Ajad</SelectItem>
                 <SelectItem value="Soft">Soft</SelectItem>
                 <SelectItem value="Spex">Spex</SelectItem>
@@ -132,32 +133,34 @@ export const AddUserDialog = ({ open, onOpenChange, onSuccess }: AddUserDialogPr
           </div>
 
           <div>
-            <Label htmlFor="phone">Phone Number *</Label>
+            <Label htmlFor="phone" className="text-sm font-semibold">Phone Number *</Label>
             <Input
               id="phone"
               type="tel"
               value={formData.phone_number}
               onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
               placeholder="05X-XXX-XXXX"
+              className="mt-1"
               required
             />
           </div>
 
           <div>
-            <Label htmlFor="domain">Domain URL *</Label>
+            <Label htmlFor="domain" className="text-sm font-semibold">Domain URL *</Label>
             <Input
               id="domain"
               type="url"
               value={formData.domain_url}
               onChange={(e) => setFormData({ ...formData, domain_url: e.target.value })}
               placeholder="https://example.com"
+              className="mt-1"
               required
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label htmlFor="c_cost">C-COST (₪) *</Label>
+              <Label htmlFor="c_cost" className="text-sm font-semibold">C-COST (₪) *</Label>
               <Input
                 id="c_cost"
                 type="number"
@@ -165,11 +168,12 @@ export const AddUserDialog = ({ open, onOpenChange, onSuccess }: AddUserDialogPr
                 value={formData.c_cost}
                 onChange={(e) => setFormData({ ...formData, c_cost: e.target.value })}
                 placeholder="0.00"
+                className="mt-1"
                 required
               />
             </div>
             <div>
-              <Label htmlFor="m_cost">M-COST (₪) *</Label>
+              <Label htmlFor="m_cost" className="text-sm font-semibold">M-COST (₪) *</Label>
               <Input
                 id="m_cost"
                 type="number"
@@ -177,29 +181,31 @@ export const AddUserDialog = ({ open, onOpenChange, onSuccess }: AddUserDialogPr
                 value={formData.m_cost}
                 onChange={(e) => setFormData({ ...formData, m_cost: e.target.value })}
                 placeholder="0.00"
+                className="mt-1"
                 required
               />
             </div>
           </div>
 
           <div>
-            <Label htmlFor="begin_date">Begin Date *</Label>
+            <Label htmlFor="begin_date" className="text-sm font-semibold">Begin Date *</Label>
             <Input
               id="begin_date"
               type="date"
               value={formData.begin_date}
               onChange={(e) => setFormData({ ...formData, begin_date: e.target.value })}
+              className="mt-1"
               required
             />
           </div>
 
           {formData.c_cost && formData.m_cost && (
-            <div className="p-3 bg-secondary rounded-lg">
-              <p className="text-sm font-medium">Auto-calculated:</p>
-              <p className="text-xs text-muted-foreground mt-1">
+            <div className="p-4 bg-secondary rounded-lg border border-border">
+              <p className="text-sm font-semibold text-foreground mb-2">Auto-calculated:</p>
+              <p className="text-xs text-muted-foreground">
                 Expire Date: {new Date(new Date(formData.begin_date).getTime() + 365 * 24 * 60 * 60 * 1000).toLocaleDateString()}
               </p>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-success-text font-medium">
                 Profit: ₪{(parseFloat(formData.c_cost) - parseFloat(formData.m_cost) * 12).toFixed(2)}
               </p>
             </div>
@@ -217,7 +223,7 @@ export const AddUserDialog = ({ open, onOpenChange, onSuccess }: AddUserDialogPr
             </Button>
             <Button
               type="submit"
-              className="flex-1 bg-gradient-primary text-white hover:opacity-90"
+              className="flex-1 bg-gradient-primary text-white hover:shadow-button-hover transition-all duration-normal"
               disabled={isLoading}
             >
               {isLoading ? (

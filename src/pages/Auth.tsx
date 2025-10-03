@@ -50,25 +50,25 @@ const Auth = () => {
     <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-subtle">
       {/* Hero Section with Gradient */}
       <div className="w-full max-w-md">
-        <div className="bg-gradient-primary rounded-t-3xl p-8 text-center">
-          <div className="w-20 h-20 mx-auto mb-4 bg-white rounded-full flex items-center justify-center shadow-lg">
+        <div className="bg-gradient-primary rounded-t-2xl p-8 text-center shadow-lg">
+          <div className="w-20 h-20 mx-auto mb-4 bg-white rounded-full flex items-center justify-center shadow-md">
             <span className="text-4xl">📊</span>
           </div>
           <h1 className="text-3xl font-bold text-white mb-2">Subscription Manager</h1>
-          <p className="text-white/90 text-sm">Manage your hosting customers with ease</p>
+          <p className="text-white/90 text-sm font-medium">Manage your hosting customers with ease</p>
         </div>
 
         {/* Login Card */}
-        <div className="bg-card rounded-b-3xl shadow-lg p-8">
+        <div className="bg-card rounded-b-2xl shadow-lg p-8">
           <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold mb-2">Welcome Back</h2>
-            <p className="text-muted-foreground">Sign in to manage your subscriptions</p>
+            <h2 className="text-2xl font-bold text-foreground mb-2">Welcome Back</h2>
+            <p className="text-muted-foreground font-medium">Sign in to manage your subscriptions</p>
           </div>
 
           <Button
             onClick={handleGoogleLogin}
             disabled={isLoading}
-            className="w-full bg-white hover:bg-gray-50 text-foreground border-2 border-border shadow-sm h-12 text-base font-medium"
+            className="w-full bg-white hover:bg-gray-50 text-foreground border-2 border-border shadow-sm h-12 text-base font-semibold transition-all duration-normal hover:shadow-md"
           >
             {isLoading ? (
               <Loader2 className="mr-2 h-5 w-5 animate-spin" />
@@ -95,7 +95,7 @@ const Auth = () => {
             Continue with Google
           </Button>
 
-          <p className="mt-6 text-center text-xs text-muted-foreground">
+          <p className="mt-6 text-center text-xs text-muted-foreground font-medium">
             Admin access only. Sign in with your authorized Google account.
           </p>
         </div>

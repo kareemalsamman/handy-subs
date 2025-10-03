@@ -141,11 +141,11 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Hero Section with Gradient */}
-      <div className="bg-gradient-primary px-4 pt-6 pb-8 rounded-b-3xl shadow-lg">
+      <div className="bg-gradient-primary px-4 pt-6 pb-8 rounded-b-2xl shadow-lg">
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-2xl font-bold text-white">Dashboard</h1>
-            <p className="text-white/80 text-sm mt-1">
+            <p className="text-white/90 text-sm mt-1 font-medium">
               {new Date().toLocaleDateString("en-US", {
                 weekday: "long",
                 year: "numeric",
@@ -158,7 +158,7 @@ const Dashboard = () => {
             onClick={handleLogout}
             variant="ghost"
             size="icon"
-            className="text-white hover:bg-white/20"
+            className="text-white hover:bg-white/20 rounded-full transition-colors"
           >
             <LogOut className="h-5 w-5" />
           </Button>
@@ -209,13 +209,13 @@ const Dashboard = () => {
               placeholder="Search by username..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9"
+              className="pl-9 border-border focus:border-primary transition-colors"
             />
           </div>
           <Button
             size="icon"
             variant="outline"
-            className="shrink-0"
+            className="shrink-0 hover:bg-secondary transition-colors"
           >
             <Bell className="h-4 w-4" />
           </Button>
@@ -224,10 +224,10 @@ const Dashboard = () => {
         {/* Status Filter */}
         <div className="flex gap-2">
           <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-            <SelectTrigger className="flex-1">
+            <SelectTrigger className="flex-1 border-border">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-popover z-50">
               <SelectItem value="All Status">All Status</SelectItem>
               <SelectItem value="Active">Active</SelectItem>
               <SelectItem value="Expired">Expired</SelectItem>
@@ -236,7 +236,7 @@ const Dashboard = () => {
           </Select>
           <Button
             onClick={() => setIsAddDialogOpen(true)}
-            className="bg-gradient-primary text-white hover:opacity-90 shrink-0"
+            className="bg-gradient-primary text-white hover:shadow-button-hover transition-all duration-normal shrink-0"
           >
             <Plus className="h-4 w-4 mr-1" />
             Add User

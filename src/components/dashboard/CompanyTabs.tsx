@@ -15,10 +15,10 @@ export const CompanyTabs = ({ selectedCompany, onSelectCompany }: CompanyTabsPro
           key={company}
           onClick={() => onSelectCompany(company)}
           className={cn(
-            "px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all",
+            "px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap transition-all duration-normal",
             selectedCompany === company
-              ? "bg-gradient-primary text-white shadow-md"
-              : "bg-white text-foreground hover:bg-secondary"
+              ? "bg-gradient-primary text-white shadow-glow scale-105"
+              : "bg-card text-foreground hover:bg-secondary border border-border"
           )}
         >
           {company}
