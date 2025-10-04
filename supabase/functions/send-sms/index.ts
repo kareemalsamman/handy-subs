@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -10,43 +11,103 @@ interface SMSRequest {
   message: string;
 }
 
+// XML escaping function to prevent injection attacks
+function escapeXml(unsafe: string): string {
+  return unsafe
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    // Verify authentication
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Verify the token with Supabase
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid authentication token' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const { phone, message }: SMSRequest = await req.json();
 
     if (!phone || !message) {
       throw new Error('Phone number and message are required');
     }
 
+    // Validate phone number format (Israeli format: 10 digits starting with 0)
+    const phoneRegex = /^0[0-9]{9}$/;
+    if (!phoneRegex.test(phone)) {
+      throw new Error('Invalid phone number format. Must be 10 digits starting with 0');
+    }
+
+    // Validate message length
+    if (message.length > 500) {
+      throw new Error('Message too long (max 500 characters)');
+    }
+
     console.log('Sending SMS to:', phone);
+
+    // Get SMS credentials from secrets and settings
+    const smsToken = Deno.env.get('SMS_API_TOKEN');
+    if (!smsToken) {
+      throw new Error('SMS_API_TOKEN not configured');
+    }
+
+    // Fetch SMS settings from database
+    const { data: settings } = await supabaseClient
+      .from('settings')
+      .select('sms_username, sms_source')
+      .single();
+
+    const smsUsername = settings?.sms_username || 'morshed';
+    const smsSource = settings?.sms_source || '0525143581';
 
     // Generate unique DLR ID
     const dlr = crypto.randomUUID();
 
-    // Build XML payload
+    // Build XML payload with properly escaped user inputs
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <sms>
     <user>
-        <username>morshed</username>
+        <username>${escapeXml(smsUsername)}</username>
     </user>
-    <source>0525143581</source>
+    <source>${escapeXml(smsSource)}</source>
     <destinations>
-        <phone id="${dlr}">${phone}</phone>
+        <phone id="${dlr}">${escapeXml(phone)}</phone>
     </destinations>
-    <message>${message}</message>
+    <message>${escapeXml(message)}</message>
 </sms>`;
 
-    console.log('SMS XML payload:', xml);
+    console.log('SMS XML payload created for phone:', phone);
 
-    // Send SMS via API
+    // Send SMS via API using secret token
     const response = await fetch('https://019sms.co.il/api', {
       method: 'POST',
       headers: {
-        'Authorization': 'Bearer eyJ0eXAiOiJqd3QiLCJhbGciOiJIUzI1NiJ9.eyJmaXJzdF9rZXkiOiI3MDkzNCIsInNlY29uZF9rZXkiOiIzNzg2MTg4IiwiaXNzdWVkQXQiOiIwMS0wOC0yMDI1IDAwOjU5OjQ5IiwidHRsIjo2MzA3MjAwMH0.YgiPiKpDBJjjZYCntmPaAFPwQoOYsNZc0DYISaSPY7U',
+        'Authorization': `Bearer ${smsToken}`,
         'Content-Type': 'application/xml',
         'charset': 'utf-8',
       },
@@ -59,6 +120,16 @@ serve(async (req) => {
     if (!response.ok) {
       throw new Error(`SMS API returned ${response.status}: ${responseText}`);
     }
+
+    // Log SMS send to database
+    await supabaseClient
+      .from('sms_logs')
+      .insert({
+        phone_number: phone,
+        message: message,
+        status: response.ok ? 'sent' : 'failed',
+        response: responseText
+      });
 
     return new Response(
       JSON.stringify({ 

@@ -56,15 +56,36 @@ const Dashboard = () => {
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
-    // Check authentication
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    const checkAuthAndRole = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
       if (!session) {
         navigate("/auth");
-      } else {
-        fetchData();
-        fetchUnreadCount();
+        return;
       }
-    });
+
+      // Check if user has admin role
+      const { data: roleData, error: roleError } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', session.user.id)
+        .eq('role', 'admin')
+        .single();
+
+      if (roleError || !roleData) {
+        console.error('Admin role check failed:', roleError);
+        await supabase.auth.signOut();
+        toast.error('Access denied: Admin privileges required');
+        navigate('/auth');
+        return;
+      }
+
+      // User is authenticated and has admin role
+      fetchData();
+      fetchUnreadCount();
+    };
+
+    checkAuthAndRole();
   }, [navigate]);
 
   const fetchUnreadCount = async () => {
