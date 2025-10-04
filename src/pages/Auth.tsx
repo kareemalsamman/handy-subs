@@ -48,20 +48,20 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen bg-dark-gradient relative overflow-hidden flex items-center justify-center p-4">
-      {/* Animated background elements */}
+      {/* Subtle animated background elements */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute w-96 h-96 bg-primary/20 rounded-full blur-3xl -top-48 -left-48 animate-pulse"></div>
-        <div className="absolute w-96 h-96 bg-secondary/20 rounded-full blur-3xl -bottom-48 -right-48 animate-pulse delay-1000"></div>
-        <div className="absolute w-64 h-64 bg-accent/20 rounded-full blur-3xl top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 animate-pulse delay-500"></div>
+        <div className="absolute w-96 h-96 bg-white/5 rounded-full blur-3xl -top-48 -left-48 animate-pulse"></div>
+        <div className="absolute w-96 h-96 bg-white/5 rounded-full blur-3xl -bottom-48 -right-48 animate-pulse delay-1000"></div>
+        <div className="absolute w-64 h-64 bg-white/5 rounded-full blur-3xl top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 animate-pulse delay-500"></div>
       </div>
 
       <div className="relative z-10 w-full max-w-md">
         <div className="glass-strong rounded-3xl p-8 shadow-2xl">
           {/* Logo/Icon */}
           <div className="flex justify-center mb-6">
-            <div className="w-20 h-20 rounded-2xl gradient-primary flex items-center justify-center shadow-lg">
+            <div className="w-20 h-20 rounded-2xl glass flex items-center justify-center shadow-lg border border-white/20">
               <svg 
-                className="w-10 h-10 text-white" 
+                className="w-10 h-10 text-foreground" 
                 fill="none" 
                 stroke="currentColor" 
                 viewBox="0 0 24 24"
@@ -90,7 +90,7 @@ const Auth = () => {
           <Button
             onClick={handleGoogleLogin}
             disabled={isLoading}
-            className="w-full h-12 gradient-primary text-white text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
+            className="w-full h-12 glass hover:glass-strong text-foreground text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] border border-white/20"
           >
             {isLoading ? (
               <>
