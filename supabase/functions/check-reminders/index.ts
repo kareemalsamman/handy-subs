@@ -18,6 +18,14 @@ serve(async (req) => {
 
     console.log('Checking for subscription reminders...');
 
+    // Get admin phone number from settings
+    const { data: settings } = await supabase
+      .from('settings')
+      .select('admin_phone')
+      .single();
+    
+    const adminPhone = settings?.admin_phone || '0525143581';
+
     // Get current date
     const now = new Date();
     const oneMonthFromNow = new Date(now);
@@ -25,7 +33,7 @@ serve(async (req) => {
     const oneWeekFromNow = new Date(now);
     oneWeekFromNow.setDate(oneWeekFromNow.getDate() + 7);
 
-    // Find subscriptions expiring in 1 month (±1 day window)
+    // Find subscriptions expiring in 1 month (±1 day window) that haven't been reminded yet
     const { data: oneMonthSubs, error: oneMonthError } = await supabase
       .from('subscriptions')
       .select(`
@@ -34,10 +42,12 @@ serve(async (req) => {
         c_cost,
         user_id,
         domain_id,
+        one_month_reminder_sent,
         domains!inner(domain_url, id),
         users!inner(username, phone_number, id)
       `)
       .eq('status', 'active')
+      .eq('one_month_reminder_sent', false)
       .gte('expire_date', oneMonthFromNow.toISOString().split('T')[0])
       .lte('expire_date', new Date(oneMonthFromNow.getTime() + 86400000).toISOString().split('T')[0]);
 
@@ -53,16 +63,30 @@ serve(async (req) => {
         const year = expireDate.getFullYear();
         const formattedDate = `${day}/${month}/${year}`;
         
-        const message = `تذكير! 🔔
+        // User message
+        const userMessage = `تذكير! 🔔
 عزيزي ${sub.users.username}،
 اشتراكك في ${sub.domains.domain_url} سينتهي خلال شهر واحد.
 تاريخ الانتهاء: ${formattedDate}
 المبلغ السنوي: ${sub.c_cost} ₪
 الرجاء التواصل للتجديد قريباً.`;
 
+        // Admin message with customer details
+        const adminMessage = `تنبيه اشتراك! 🔔
+العميل: ${sub.users.username}
+الدومين: ${sub.domains.domain_url}
+سينتهي خلال شهر: ${formattedDate}
+المبلغ: ${sub.c_cost} ₪
+الهاتف: ${sub.users.phone_number}`;
+
         // Send SMS to user
         await supabase.functions.invoke('send-sms', {
-          body: { phone: sub.users.phone_number, message }
+          body: { phone: sub.users.phone_number, message: userMessage }
+        });
+
+        // Send SMS to admin
+        await supabase.functions.invoke('send-sms', {
+          body: { phone: adminPhone, message: adminMessage }
         });
 
         // Create notification for admin
@@ -74,11 +98,17 @@ serve(async (req) => {
           user_id: sub.users.id,
         });
 
-        console.log(`Sent 1-month reminder to ${sub.users.phone_number} for ${sub.domains.domain_url}`);
+        // Mark reminder as sent
+        await supabase
+          .from('subscriptions')
+          .update({ one_month_reminder_sent: true })
+          .eq('id', sub.id);
+
+        console.log(`Sent 1-month reminder to user ${sub.users.phone_number} and admin for ${sub.domains.domain_url}`);
       }
     }
 
-    // Find subscriptions expiring in 1 week (±1 day window)
+    // Find subscriptions expiring in 1 week (±1 day window) that haven't been reminded yet
     const { data: oneWeekSubs, error: oneWeekError } = await supabase
       .from('subscriptions')
       .select(`
@@ -87,10 +117,12 @@ serve(async (req) => {
         c_cost,
         user_id,
         domain_id,
+        one_week_reminder_sent,
         domains!inner(domain_url, id),
         users!inner(username, phone_number, id)
       `)
       .eq('status', 'active')
+      .eq('one_week_reminder_sent', false)
       .gte('expire_date', oneWeekFromNow.toISOString().split('T')[0])
       .lte('expire_date', new Date(oneWeekFromNow.getTime() + 86400000).toISOString().split('T')[0]);
 
@@ -106,16 +138,30 @@ serve(async (req) => {
         const year = expireDate.getFullYear();
         const formattedDate = `${day}/${month}/${year}`;
         
-        const message = `تنبيه هام! ⚠️
+        // User message
+        const userMessage = `تنبيه هام! ⚠️
 عزيزي ${sub.users.username}،
 اشتراكك في ${sub.domains.domain_url} سينتهي خلال أسبوع!
 تاريخ الانتهاء: ${formattedDate}
 المبلغ السنوي: ${sub.c_cost} ₪
 يرجى التجديد في أقرب وقت.`;
 
+        // Admin message with customer details
+        const adminMessage = `تنبيه عاجل! ⚠️
+العميل: ${sub.users.username}
+الدومين: ${sub.domains.domain_url}
+سينتهي خلال أسبوع: ${formattedDate}
+المبلغ: ${sub.c_cost} ₪
+الهاتف: ${sub.users.phone_number}`;
+
         // Send SMS to user
         await supabase.functions.invoke('send-sms', {
-          body: { phone: sub.users.phone_number, message }
+          body: { phone: sub.users.phone_number, message: userMessage }
+        });
+
+        // Send SMS to admin
+        await supabase.functions.invoke('send-sms', {
+          body: { phone: adminPhone, message: adminMessage }
         });
 
         // Create notification for admin
@@ -127,7 +173,13 @@ serve(async (req) => {
           user_id: sub.users.id,
         });
 
-        console.log(`Sent 1-week reminder to ${sub.users.phone_number} for ${sub.domains.domain_url}`);
+        // Mark reminder as sent
+        await supabase
+          .from('subscriptions')
+          .update({ one_week_reminder_sent: true })
+          .eq('id', sub.id);
+
+        console.log(`Sent 1-week reminder to user ${sub.users.phone_number} and admin for ${sub.domains.domain_url}`);
       }
     }
 

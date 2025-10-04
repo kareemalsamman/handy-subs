@@ -153,6 +153,8 @@ export type Database = {
           domain_id: string
           expire_date: string | null
           id: string
+          one_month_reminder_sent: boolean
+          one_week_reminder_sent: boolean
           status: Database["public"]["Enums"]["subscription_status"]
           updated_at: string
           user_id: string
@@ -168,6 +170,8 @@ export type Database = {
           domain_id: string
           expire_date?: string | null
           id?: string
+          one_month_reminder_sent?: boolean
+          one_week_reminder_sent?: boolean
           status?: Database["public"]["Enums"]["subscription_status"]
           updated_at?: string
           user_id: string
@@ -183,6 +187,8 @@ export type Database = {
           domain_id?: string
           expire_date?: string | null
           id?: string
+          one_month_reminder_sent?: boolean
+          one_week_reminder_sent?: boolean
           status?: Database["public"]["Enums"]["subscription_status"]
           updated_at?: string
           user_id?: string
