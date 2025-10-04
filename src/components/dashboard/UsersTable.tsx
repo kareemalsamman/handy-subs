@@ -167,12 +167,14 @@ export const UsersTable = ({ users, onRefresh, onEdit }: UsersTableProps) => {
                   {latestSub && (
                     <div className="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-border">
                       <div>
-                        <p className="text-xs text-muted-foreground mb-1">C-COST</p>
+                        <p className="text-xs text-muted-foreground mb-1">YEARLY PAY</p>
                         <p className="font-semibold text-foreground">₪{latestSub.c_cost}</p>
                       </div>
                       <div>
-                        <p className="text-xs text-muted-foreground mb-1">PROFIT</p>
-                        <p className="font-semibold text-success-text">₪{latestSub.profit?.toFixed(2)}</p>
+                        <p className="text-xs text-muted-foreground mb-1">DOMAIN</p>
+                        <p className="font-semibold text-foreground">
+                          {(latestSub as any).domain_cost > 0 ? `₪${(latestSub as any).domain_cost}` : "No"}
+                        </p>
                       </div>
                       <div>
                         <p className="text-xs text-muted-foreground mb-1">EXPIRES</p>

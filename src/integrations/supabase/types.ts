@@ -148,6 +148,7 @@ export type Database = {
           cancelled_at: string | null
           cancelled_reason: string | null
           created_at: string
+          domain_cost: number | null
           expire_date: string | null
           id: string
           m_cost: number
@@ -162,6 +163,7 @@ export type Database = {
           cancelled_at?: string | null
           cancelled_reason?: string | null
           created_at?: string
+          domain_cost?: number | null
           expire_date?: string | null
           id?: string
           m_cost: number
@@ -176,6 +178,7 @@ export type Database = {
           cancelled_at?: string | null
           cancelled_reason?: string | null
           created_at?: string
+          domain_cost?: number | null
           expire_date?: string | null
           id?: string
           m_cost?: number

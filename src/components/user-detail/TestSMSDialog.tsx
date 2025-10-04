@@ -79,15 +79,26 @@ export const TestSMSDialog = ({ open, onOpenChange, user }: TestSMSDialogProps) 
         return;
       }
 
-      // Here you would call your SMS API
-      // For now, just simulate success
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      // Call the SMS edge function
+      const { supabase } = await import("@/integrations/supabase/client");
+      const { data, error } = await supabase.functions.invoke('send-sms', {
+        body: {
+          phone: user.phone_number,
+          message: message
+        }
+      });
 
-      toast.success("Test SMS sent successfully!");
-      onOpenChange(false);
+      if (error) throw error;
+
+      if (data?.success) {
+        toast.success("Test SMS sent successfully!");
+        onOpenChange(false);
+      } else {
+        throw new Error(data?.error || "Failed to send SMS");
+      }
     } catch (error: any) {
       console.error("Error sending test SMS:", error);
-      toast.error("Failed to send test SMS");
+      toast.error(error.message || "Failed to send test SMS");
     } finally {
       setIsLoading(false);
     }

@@ -106,8 +106,9 @@ const Dashboard = () => {
       // Calculate stats
       const totalUsers = formattedUsers.length;
       const totalRevenue = formattedUsers.reduce((sum, user) => {
-        const latestSub = user.subscriptions?.[0];
-        return sum + (latestSub?.c_cost || 0);
+        return sum + (user.subscriptions || []).reduce((subSum, sub) => {
+          return subSum + (sub.c_cost || 0);
+        }, 0);
       }, 0);
       const activeUsers = formattedUsers.filter(user => 
         user.subscriptions?.some(sub => sub.status === "active")
