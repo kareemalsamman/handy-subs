@@ -19,22 +19,37 @@ export type Database = {
           created_at: string
           domain_url: string
           id: string
+          last_checked: string | null
+          plugins_updates_count: number | null
+          themes_updates_count: number | null
           user_id: string
           wordpress_admin_url: string | null
+          wordpress_secret_key: string | null
+          wordpress_update_available: boolean | null
         }
         Insert: {
           created_at?: string
           domain_url: string
           id?: string
+          last_checked?: string | null
+          plugins_updates_count?: number | null
+          themes_updates_count?: number | null
           user_id: string
           wordpress_admin_url?: string | null
+          wordpress_secret_key?: string | null
+          wordpress_update_available?: boolean | null
         }
         Update: {
           created_at?: string
           domain_url?: string
           id?: string
+          last_checked?: string | null
+          plugins_updates_count?: number | null
+          themes_updates_count?: number | null
           user_id?: string
           wordpress_admin_url?: string | null
+          wordpress_secret_key?: string | null
+          wordpress_update_available?: boolean | null
         }
         Relationships: [
           {
@@ -90,27 +105,33 @@ export type Database = {
       settings: {
         Row: {
           admin_phone: string
+          auto_wordpress_updates_enabled: boolean | null
           id: string
           server_monthly_cost: number
           sms_source: string | null
           sms_token: string | null
           sms_username: string | null
+          wordpress_update_schedule: string | null
         }
         Insert: {
           admin_phone?: string
+          auto_wordpress_updates_enabled?: boolean | null
           id?: string
           server_monthly_cost?: number
           sms_source?: string | null
           sms_token?: string | null
           sms_username?: string | null
+          wordpress_update_schedule?: string | null
         }
         Update: {
           admin_phone?: string
+          auto_wordpress_updates_enabled?: boolean | null
           id?: string
           server_monthly_cost?: number
           sms_source?: string | null
           sms_token?: string | null
           sms_username?: string | null
+          wordpress_update_schedule?: string | null
         }
         Relationships: []
       }
@@ -236,6 +257,38 @@ export type Database = {
           username?: string
         }
         Relationships: []
+      }
+      wordpress_update_logs: {
+        Row: {
+          created_at: string
+          details: string | null
+          domain_id: string
+          id: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          details?: string | null
+          domain_id: string
+          id?: string
+          status: string
+        }
+        Update: {
+          created_at?: string
+          details?: string | null
+          domain_id?: string
+          id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wordpress_update_logs_domain_id_fkey"
+            columns: ["domain_id"]
+            isOneToOne: false
+            referencedRelation: "domains"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

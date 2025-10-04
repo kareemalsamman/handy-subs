@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
 
 const Settings = () => {
   const navigate = useNavigate();
@@ -15,6 +16,7 @@ const Settings = () => {
   const [settings, setSettings] = useState({
     server_monthly_cost: "504",
     admin_phone: "0525143581",
+    auto_wordpress_updates_enabled: false,
   });
 
   useEffect(() => {
@@ -35,6 +37,7 @@ const Settings = () => {
         setSettings({
           server_monthly_cost: data.server_monthly_cost.toString(),
           admin_phone: data.admin_phone,
+          auto_wordpress_updates_enabled: data.auto_wordpress_updates_enabled || false,
         });
       }
     } catch (error: any) {
@@ -60,6 +63,7 @@ const Settings = () => {
           .update({
             server_monthly_cost: parseFloat(settings.server_monthly_cost),
             admin_phone: settings.admin_phone,
+            auto_wordpress_updates_enabled: settings.auto_wordpress_updates_enabled,
           })
           .eq("id", existingSettings.id);
 
@@ -70,6 +74,7 @@ const Settings = () => {
           .insert({
             server_monthly_cost: parseFloat(settings.server_monthly_cost),
             admin_phone: settings.admin_phone,
+            auto_wordpress_updates_enabled: settings.auto_wordpress_updates_enabled,
           });
 
         if (error) throw error;
@@ -187,6 +192,44 @@ const Settings = () => {
               </>
             )}
           </Button>
+        </Card>
+
+        {/* WordPress Auto-Updates Settings */}
+        <Card className="glass-strong p-6">
+          <h2 className="text-lg font-semibold text-foreground mb-4">WordPress Auto-Updates</h2>
+          
+          <div className="space-y-4">
+            <div className="flex items-center justify-between p-4 glass rounded-lg">
+              <div className="space-y-1">
+                <Label htmlFor="auto-updates" className="text-sm font-semibold">
+                  Enable Automatic Updates
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  Automatically update all WordPress sites every Sunday at 2:00 AM
+                </p>
+              </div>
+              <Switch
+                id="auto-updates"
+                checked={settings.auto_wordpress_updates_enabled}
+                onCheckedChange={(checked) =>
+                  setSettings({ ...settings, auto_wordpress_updates_enabled: checked })
+                }
+              />
+            </div>
+
+            <div className="glass p-4 rounded-lg">
+              <h3 className="text-sm font-semibold text-foreground mb-2">Schedule Information</h3>
+              <p className="text-xs text-muted-foreground">
+                • Updates run every Sunday at 2:00 AM UTC
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                • All configured WordPress sites will be updated automatically
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                • You can manually check and update sites anytime from user detail pages
+              </p>
+            </div>
+          </div>
         </Card>
       </div>
     </div>
