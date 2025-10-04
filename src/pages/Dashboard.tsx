@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Users, DollarSign, Building2, UserCheck, Search, Plus, Bell, LogOut } from "lucide-react";
+import { Loader2, Users, DollarSign, Building2, UserCheck, Search, Plus, Bell, LogOut, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -181,14 +181,24 @@ const Dashboard = () => {
               })}
             </p>
           </div>
-          <Button
-            onClick={handleLogout}
-            variant="ghost"
-            size="icon"
-            className="text-white hover:bg-white/20 rounded-full transition-colors"
-          >
-            <LogOut className="h-5 w-5" />
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={() => navigate("/settings")}
+              variant="ghost"
+              size="icon"
+              className="text-white hover:bg-white/20 rounded-full transition-colors"
+            >
+              <Settings className="h-5 w-5" />
+            </Button>
+            <Button
+              onClick={handleLogout}
+              variant="ghost"
+              size="icon"
+              className="text-white hover:bg-white/20 rounded-full transition-colors"
+            >
+              <LogOut className="h-5 w-5" />
+            </Button>
+          </div>
         </div>
 
         {/* Stats Cards */}

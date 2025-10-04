@@ -1,12 +1,19 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2, ExternalLink } from "lucide-react";
+import { Edit, Trash2, ExternalLink, Eye } from "lucide-react";
 import { User } from "@/pages/Dashboard";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+
+interface UsersTableProps {
+  users: User[];
+  onRefresh: () => void;
+  onEdit: (user: User) => void;
+}
 
 interface UsersTableProps {
   users: User[];
@@ -16,6 +23,7 @@ interface UsersTableProps {
 
 export const UsersTable = ({ users, onRefresh, onEdit }: UsersTableProps) => {
   const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   const handleDelete = async () => {
     if (!deleteUserId) return;
@@ -80,7 +88,8 @@ export const UsersTable = ({ users, onRefresh, onEdit }: UsersTableProps) => {
           return (
             <div
               key={user.id}
-              className="glass rounded-xl p-4 hover:shadow-lg transition-all duration-normal animate-fade-in"
+              className="glass rounded-xl p-4 hover:shadow-lg transition-all duration-normal animate-fade-in cursor-pointer"
+              onClick={() => navigate(`/user/${user.id}`)}
             >
             <div className="flex items-start justify-between mb-3">
               <div className="flex-1">
@@ -99,7 +108,21 @@ export const UsersTable = ({ users, onRefresh, onEdit }: UsersTableProps) => {
                     size="icon" 
                     variant="ghost" 
                     className="h-8 w-8 hover:bg-secondary transition-colors"
-                    onClick={() => onEdit(user)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/user/${user.id}`);
+                    }}
+                  >
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                  <Button 
+                    size="icon" 
+                    variant="ghost" 
+                    className="h-8 w-8 hover:bg-secondary transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEdit(user);
+                    }}
                   >
                     <Edit className="h-4 w-4" />
                   </Button>
@@ -107,7 +130,10 @@ export const UsersTable = ({ users, onRefresh, onEdit }: UsersTableProps) => {
                     size="icon" 
                     variant="ghost" 
                     className="h-8 w-8 text-destructive hover:bg-destructive/10 hover:text-destructive transition-colors"
-                    onClick={() => setDeleteUserId(user.id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setDeleteUserId(user.id);
+                    }}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
