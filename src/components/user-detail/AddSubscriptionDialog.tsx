@@ -66,14 +66,22 @@ export const AddSubscriptionDialog = ({ open, onOpenChange, userId, domains, onS
       const cCost = parseFloat(formData.c_cost);
       const domainCost = formData.buy_domain ? parseFloat(formData.domain_cost || "0") : 0;
 
+      // Format dates correctly in local timezone
+      const formatLocalDate = (date: Date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      };
+
       const { data: subscriptionData, error: subError } = await supabase
         .from("subscriptions")
         .insert({
           user_id: userId,
           domain_id: formData.domain_id,
           c_cost: cCost,
-          begin_date: beginDate.toISOString().split('T')[0],
-          expire_date: expireDate.toISOString().split('T')[0],
+          begin_date: formatLocalDate(beginDate),
+          expire_date: formatLocalDate(expireDate),
           status: "active",
           buy_domain: formData.buy_domain,
           domain_cost: domainCost,

@@ -88,14 +88,22 @@ export const EditSubscriptionDialog = ({
         return;
       }
 
+      // Format dates correctly in local timezone
+      const formatLocalDate = (date: Date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      };
+
       const { error } = await supabase
         .from("subscriptions")
         .update({
           c_cost: cCost,
           domain_cost: domainCost,
           buy_domain: formData.buy_domain,
-          begin_date: beginDate.toISOString().split('T')[0],
-          expire_date: expireDate.toISOString().split('T')[0],
+          begin_date: formatLocalDate(beginDate),
+          expire_date: formatLocalDate(expireDate),
           status: formData.status as any,
           cancelled_at: formData.status === 'cancelled' ? new Date().toISOString() : null,
         })
