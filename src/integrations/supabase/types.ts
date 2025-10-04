@@ -144,6 +144,7 @@ export type Database = {
       subscriptions: {
         Row: {
           begin_date: string
+          buy_domain: boolean
           c_cost: number
           cancelled_at: string | null
           cancelled_reason: string | null
@@ -158,6 +159,7 @@ export type Database = {
         }
         Insert: {
           begin_date: string
+          buy_domain?: boolean
           c_cost: number
           cancelled_at?: string | null
           cancelled_reason?: string | null
@@ -172,6 +174,7 @@ export type Database = {
         }
         Update: {
           begin_date?: string
+          buy_domain?: boolean
           c_cost?: number
           cancelled_at?: string | null
           cancelled_reason?: string | null

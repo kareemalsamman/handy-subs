@@ -13,8 +13,8 @@ interface TestSMSDialogProps {
   user: {
     username: string;
     phone_number: string;
-    domains?: { domain_url: string }[];
-    subscriptions?: { c_cost: number; expire_date: string }[];
+    domains?: { id: string; domain_url: string }[];
+    subscriptions?: { id: string; c_cost: number; expire_date: string; domain_id: string }[];
   };
 }
 
@@ -22,14 +22,18 @@ export const TestSMSDialog = ({ open, onOpenChange, user }: TestSMSDialogProps) 
   const [isLoading, setIsLoading] = useState(false);
   const [messageType, setMessageType] = useState("1_month_reminder");
   const [customMessage, setCustomMessage] = useState("");
+  const [selectedDomainId, setSelectedDomainId] = useState("");
 
   const getMessageTemplate = (type: string) => {
-    const latestSub = user.subscriptions?.[0];
-    const domain = user.domains?.[0]?.domain_url || "your domain";
-    const expireDate = latestSub?.expire_date
-      ? new Date(latestSub.expire_date).toLocaleDateString("ar-EG")
+    const selectedDomain = user.domains?.find(d => d.domain_url === selectedDomainId) || user.domains?.[0];
+    const domain = selectedDomain?.domain_url || "your domain";
+    
+    // Find subscription for selected domain
+    const domainSub = user.subscriptions?.find(s => s.domain_id === selectedDomain?.id) || user.subscriptions?.[0];
+    const expireDate = domainSub?.expire_date
+      ? new Date(domainSub.expire_date).toLocaleDateString("ar-EG")
       : "التاريخ";
-    const cCost = latestSub?.c_cost || "0";
+    const cCost = domainSub?.c_cost || "0";
 
     switch (type) {
       case "1_month_reminder":
@@ -113,7 +117,23 @@ export const TestSMSDialog = ({ open, onOpenChange, user }: TestSMSDialogProps) 
 
         <div className="space-y-4">
           <div>
-            <Label className="text-sm font-semibold">Message Type</Label>
+            <Label className="text-sm font-semibold text-foreground">Select Domain</Label>
+            <Select value={selectedDomainId} onValueChange={setSelectedDomainId}>
+              <SelectTrigger className="mt-2">
+                <SelectValue placeholder="Choose a domain" />
+              </SelectTrigger>
+              <SelectContent className="bg-popover">
+                {user.domains?.map((domain) => (
+                  <SelectItem key={domain.domain_url} value={domain.domain_url}>
+                    {domain.domain_url}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label className="text-sm font-semibold text-foreground">Message Type</Label>
             <Select value={messageType} onValueChange={setMessageType}>
               <SelectTrigger className="mt-2">
                 <SelectValue />
@@ -130,7 +150,7 @@ export const TestSMSDialog = ({ open, onOpenChange, user }: TestSMSDialogProps) 
 
           {messageType === "custom" ? (
             <div>
-              <Label className="text-sm font-semibold">Custom Message</Label>
+              <Label className="text-sm font-semibold text-foreground">Custom Message</Label>
               <Textarea
                 value={customMessage}
                 onChange={(e) => setCustomMessage(e.target.value)}
@@ -140,16 +160,19 @@ export const TestSMSDialog = ({ open, onOpenChange, user }: TestSMSDialogProps) 
             </div>
           ) : (
             <div>
-              <Label className="text-sm font-semibold">Preview</Label>
+              <Label className="text-sm font-semibold text-foreground">Preview</Label>
               <div className="mt-2 p-4 glass rounded-lg border border-border">
-                <p className="text-sm whitespace-pre-wrap text-right">{getMessageTemplate(messageType)}</p>
+                <p className="text-sm whitespace-pre-wrap text-right text-foreground">{getMessageTemplate(messageType)}</p>
               </div>
             </div>
           )}
 
           <div className="glass p-3 rounded-lg">
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-foreground">
               <strong>Send to:</strong> {user.phone_number}
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              <strong>Domain:</strong> {selectedDomainId || user.domains?.[0]?.domain_url || "No domain selected"}
             </p>
           </div>
 

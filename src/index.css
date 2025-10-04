@@ -2,83 +2,82 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* Dark Mode Liquid Glass Design System - All colors MUST be HSL */
 
 @layer base {
   :root {
-    /* iOS Liquid Glass Theme - Blue Sky Gradient */
-    --background: 210 100% 97%;
-    --foreground: 220 40% 15%;
+    /* Dark Theme - Deep Purple/Blue Gradient Background */
+    --background: 240 10% 8%;
+    --foreground: 240 5% 96%;
     
-    --card: 0 0% 100%;
-    --card-foreground: 220 40% 15%;
+    --card: 240 10% 12%;
+    --card-foreground: 240 5% 96%;
     
-    --popover: 0 0% 100%;
-    --popover-foreground: 220 40% 15%;
+    --popover: 240 10% 10%;
+    --popover-foreground: 240 5% 96%;
     
-    /* Primary: Sky Blue to Azure */
-    --primary: 210 100% 56%;
+    /* Primary: Deep Purple */
+    --primary: 270 70% 50%;
     --primary-foreground: 0 0% 100%;
-    --primary-light: 210 100% 70%;
-    --primary-dark: 215 100% 45%;
+    --primary-light: 270 70% 60%;
+    --primary-dark: 270 70% 40%;
     
-    /* Secondary: Light Blue */
-    --secondary: 200 100% 60%;
+    /* Secondary: Vibrant Pink/Magenta */
+    --secondary: 320 70% 50%;
     --secondary-foreground: 0 0% 100%;
     
-    /* Accent: Soft Cyan */
-    --accent: 190 100% 50%;
+    /* Accent: Cyan/Teal */
+    --accent: 180 70% 45%;
     --accent-foreground: 0 0% 100%;
     
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 20% 50%;
+    --muted: 240 10% 18%;
+    --muted-foreground: 240 5% 60%;
     
-    --destructive: 0 84% 60%;
+    --destructive: 0 70% 50%;
     --destructive-foreground: 0 0% 100%;
     
-    --border: 210 30% 85%;
-    --input: 210 30% 90%;
-    --ring: 210 100% 56%;
+    --border: 240 10% 20%;
+    --input: 240 10% 15%;
+    --ring: 270 70% 50%;
     
-    --radius: 1.25rem;
+    --radius: 1rem;
     
-    /* Status Colors */
+    /* Status Colors - Adjusted for dark mode */
     --success: 142 71% 45%;
-    --success-bg: 142 71% 95%;
-    --success-text: 142 71% 30%;
+    --success-bg: 142 71% 15%;
+    --success-text: 142 71% 70%;
     
     --warning: 38 92% 50%;
-    --warning-bg: 38 92% 95%;
-    --warning-text: 38 92% 30%;
+    --warning-bg: 38 92% 15%;
+    --warning-text: 38 92% 70%;
     
     --error: 0 72% 51%;
-    --error-bg: 0 72% 95%;
-    --error-text: 0 72% 30%;
+    --error-bg: 0 72% 15%;
+    --error-text: 0 72% 70%;
     
     /* Expired status colors */
-    --expired-bg: 38 92% 95%;
-    --expired-text: 38 92% 35%;
+    --expired-bg: 38 92% 15%;
+    --expired-text: 38 92% 70%;
     --expired-border: 38 92% 50%;
     
     /* Cancelled status colors */
-    --cancelled-bg: 0 84% 96%;
-    --cancelled-text: 0 84% 40%;
+    --cancelled-bg: 0 84% 15%;
+    --cancelled-text: 0 84% 70%;
     --cancelled-border: 0 84% 60%;
     
-    /* Liquid Glass Variables */
-    --glass-bg: 255 255 255 / 0.25;
-    --glass-bg-strong: 255 255 255 / 0.4;
-    --glass-border: 255 255 255 / 0.3;
+    /* Liquid Glass Variables for Dark Mode */
+    --glass-bg: 255 255 255 / 0.05;
+    --glass-bg-strong: 255 255 255 / 0.1;
+    --glass-border: 255 255 255 / 0.15;
     --glass-blur: 40px;
-    --glass-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
-    --glass-shadow-strong: 0 12px 48px rgba(31, 38, 135, 0.25);
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    --glass-shadow-strong: 0 12px 48px rgba(0, 0, 0, 0.6);
     
-    /* Gradients */
-    --gradient-sky: linear-gradient(135deg, hsl(210, 100%, 56%) 0%, hsl(200, 100%, 60%) 100%);
-    --gradient-ocean: linear-gradient(180deg, hsl(210, 100%, 56%) 0%, hsl(215, 100%, 45%) 100%);
-    --gradient-glass: linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.1) 100%);
+    /* Dark Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(270, 70%, 50%) 0%, hsl(320, 70%, 50%) 100%);
+    --gradient-secondary: linear-gradient(135deg, hsl(320, 70%, 50%) 0%, hsl(0, 70%, 50%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(180, 70%, 45%) 0%, hsl(270, 70%, 50%) 100%);
+    --gradient-glass: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
     
     /* Animations */
     --animate-duration: 0.3s;
@@ -94,83 +93,79 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground font-sans;
-    background: linear-gradient(180deg, hsl(210, 100%, 60%) 0%, hsl(205, 100%, 65%) 50%, hsl(200, 100%, 70%) 100%);
+    background: linear-gradient(135deg, hsl(240, 15%, 8%) 0%, hsl(260, 20%, 12%) 50%, hsl(280, 15%, 10%) 100%);
     min-height: 100vh;
   }
 
-  /* Focus states for accessibility */
+  /* Focus states for accessibility - High contrast for dark mode */
   *:focus-visible {
-    @apply outline-none ring-2 ring-primary ring-offset-2;
+    @apply outline-none ring-2 ring-primary ring-offset-2 ring-offset-background;
   }
 }
 
-/* iOS Liquid Glass Utilities */
+/* Dark Mode Liquid Glass Utilities */
 @layer utilities {
   .glass {
-    background: rgba(255, 255, 255, 0.25);
+    background: rgba(255, 255, 255, 0.05);
     backdrop-filter: blur(40px) saturate(180%);
     -webkit-backdrop-filter: blur(40px) saturate(180%);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15),
-                inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
   }
 
   .glass-strong {
-    background: rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(40px) saturate(180%);
     -webkit-backdrop-filter: blur(40px) saturate(180%);
-    border: 1px solid rgba(255, 255, 255, 0.4);
-    box-shadow: 0 12px 48px rgba(31, 38, 135, 0.25),
-                inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.6),
+                inset 0 1px 0 rgba(255, 255, 255, 0.15);
   }
 
   .glass-card {
-    background: rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.08);
     backdrop-filter: blur(40px) saturate(180%);
     -webkit-backdrop-filter: blur(40px) saturate(180%);
-    border: 1px solid rgba(255, 255, 255, 0.35);
-    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15),
-                inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .glass-card:hover {
-    background: rgba(255, 255, 255, 0.4);
-    box-shadow: 0 12px 48px rgba(31, 38, 135, 0.2),
-                inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    background: rgba(255, 255, 255, 0.12);
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
     transform: translateY(-2px);
   }
 
   /* Gradient utilities */
-  .gradient-sky {
-    background: linear-gradient(135deg, hsl(210, 100%, 56%) 0%, hsl(200, 100%, 60%) 100%);
-  }
-
-  .gradient-ocean {
-    background: linear-gradient(180deg, hsl(210, 100%, 56%) 0%, hsl(215, 100%, 45%) 100%);
-  }
-
-  .gradient-glass {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.1) 100%);
-  }
-
   .gradient-primary {
-    background: linear-gradient(135deg, hsl(210, 100%, 56%) 0%, hsl(200, 100%, 60%) 100%);
+    background: linear-gradient(135deg, hsl(270, 70%, 50%) 0%, hsl(320, 70%, 50%) 100%);
   }
 
   .gradient-secondary {
-    background: linear-gradient(135deg, hsl(200, 100%, 60%) 0%, hsl(190, 100%, 50%) 100%);
+    background: linear-gradient(135deg, hsl(320, 70%, 50%) 0%, hsl(0, 70%, 50%) 100%);
   }
 
-  .bg-ios-gradient {
-    background: linear-gradient(180deg, 
-      hsl(210, 100%, 60%) 0%, 
-      hsl(205, 100%, 65%) 50%, 
-      hsl(200, 100%, 70%) 100%);
+  .gradient-accent {
+    background: linear-gradient(135deg, hsl(180, 70%, 45%) 0%, hsl(270, 70%, 50%) 100%);
+  }
+
+  .gradient-glass {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  }
+
+  .bg-dark-gradient {
+    background: linear-gradient(135deg, 
+      hsl(240, 15%, 8%) 0%, 
+      hsl(260, 20%, 12%) 50%, 
+      hsl(280, 15%, 10%) 100%);
   }
 }
 
-/* Custom scrollbar styles */
+/* Custom scrollbar styles for dark mode */
 @layer utilities {
   .scrollbar-hide {
     -ms-overflow-style: none;
@@ -178,5 +173,24 @@ All colors MUST be HSL.
   }
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
+  }
+  
+  /* Custom scrollbar for dark theme */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: hsl(240, 10%, 12%);
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: hsl(270, 70%, 50%);
+    border-radius: 4px;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(270, 70%, 60%);
   }
 }
