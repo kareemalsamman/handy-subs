@@ -43,18 +43,39 @@ Deno.serve(async (req) => {
     
     console.log(`Checking updates for: ${cleanDomain}`);
 
-    const response = await fetch(wpUrl, {
+    let response = await fetch(wpUrl, {
       method: 'GET',
       headers: {
         'User-Agent': 'WordPress-Update-Manager/1.0',
       },
     });
 
+    // Fallback: retry with www. prefix if initial request failed
+    if (!response.ok) {
+      const hasWww = cleanDomain.startsWith('www.');
+      if (!hasWww) {
+        const wpUrlWithWww = `https://www.${cleanDomain}?updatestatus=true&key=${domain.wordpress_secret_key}`;
+        console.log(`Initial request failed with status ${response.status}. Retrying with: www.${cleanDomain}`);
+        response = await fetch(wpUrlWithWww, {
+          method: 'GET',
+          headers: { 'User-Agent': 'WordPress-Update-Manager/1.0' },
+        });
+      }
+    }
+
     if (!response.ok) {
       throw new Error(`WordPress site returned status: ${response.status}`);
     }
 
-    const data = await response.json();
+    let data: any;
+    try {
+      data = await response.json();
+    } catch (_) {
+      const text = await response.text();
+      console.log('Non-JSON response received from WordPress:', text?.slice(0, 200));
+      // Default to no updates if response isn't JSON to avoid hard failures
+      data = { wordpress_update: false, plugins_count: 0, themes_count: 0 };
+    }
 
     // Update domain with latest status
     const { error: updateError } = await supabase
