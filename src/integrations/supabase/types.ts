@@ -231,6 +231,27 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       users: {
         Row: {
           company: Database["public"]["Enums"]["company_type"]
@@ -299,12 +320,20 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: number
       }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       update_subscription_status: {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
     }
     Enums: {
+      app_role: "admin" | "user"
       company_type: "Ajad" | "Soft" | "Spex" | "Almas" | "Others"
       notification_type:
         | "sms_reminder"
@@ -441,6 +470,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["admin", "user"],
       company_type: ["Ajad", "Soft", "Spex", "Almas", "Others"],
       notification_type: [
         "sms_reminder",
