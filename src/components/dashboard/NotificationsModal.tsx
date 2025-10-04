@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Bell, Check, Trash2, Loader2 } from "lucide-react";
-
+import { Link } from "react-router-dom";
 interface Notification {
   id: string;
   title: string;
@@ -13,6 +13,7 @@ interface Notification {
   type: string;
   is_read: boolean;
   created_at: string;
+  action_url?: string;
 }
 
 interface NotificationsModalProps {
@@ -210,6 +211,23 @@ export const NotificationsModal = ({ open, onOpenChange }: NotificationsModalPro
                     <p className="text-xs text-muted-foreground">
                       {getRelativeTime(notification.created_at)}
                     </p>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {notification.action_url && (
+                        <Button asChild variant="secondary" size="sm">
+                          <Link to={notification.action_url}>View customer</Link>
+                        </Button>
+                      )}
+                      {(() => {
+                        const match = notification.message.match(/\+?\d[\d\s-]{7,}\d/);
+                        if (!match) return null;
+                        const tel = match[0].replace(/\s|-/g, '');
+                        return (
+                          <Button asChild variant="outline" size="sm">
+                            <a href={`tel:${tel}`} aria-label="Call customer">Call</a>
+                          </Button>
+                        );
+                      })()}
+                    </div>
                   </div>
                 </div>
                 <div className="flex gap-2 mt-3">

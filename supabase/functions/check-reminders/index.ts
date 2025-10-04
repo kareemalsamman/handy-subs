@@ -16,6 +16,13 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
+    // Update expired subscriptions first
+    try {
+      await supabase.rpc('update_subscription_status');
+      console.log('Updated expired subscriptions status.');
+    } catch (e) {
+      console.error('Failed to update subscription statuses:', e);
+    }
     console.log('Checking for subscription reminders...');
 
     // Get admin phone number from settings
@@ -47,6 +54,7 @@ serve(async (req) => {
         users!inner(username, phone_number, id)
       `)
       .eq('status', 'active')
+      .is('cancelled_at', null)
       .eq('one_month_reminder_sent', false)
       .gte('expire_date', oneMonthFromNow.toISOString().split('T')[0])
       .lte('expire_date', new Date(oneMonthFromNow.getTime() + 86400000).toISOString().split('T')[0]);
@@ -122,6 +130,7 @@ serve(async (req) => {
         users!inner(username, phone_number, id)
       `)
       .eq('status', 'active')
+      .is('cancelled_at', null)
       .eq('one_week_reminder_sent', false)
       .gte('expire_date', oneWeekFromNow.toISOString().split('T')[0])
       .lte('expire_date', new Date(oneWeekFromNow.getTime() + 86400000).toISOString().split('T')[0]);
