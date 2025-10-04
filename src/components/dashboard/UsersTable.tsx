@@ -141,9 +141,25 @@ export const UsersTable = ({ users, onRefresh, onEdit }: UsersTableProps) => {
             </div>
 
                 <div className="space-y-2 text-sm">
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <span>📱</span>
-                    <span className="font-medium">{user.phone_number}</span>
+                  <div className="flex items-center gap-2">
+                    <a 
+                      href={`tel:${user.phone_number}`}
+                      className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <span>📱</span>
+                      <span className="font-medium">{user.phone_number}</span>
+                    </a>
+                    <Button
+                      size="icon"
+                      className="h-7 w-7 bg-green-600 hover:bg-green-700 text-white"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        window.open(`https://wa.me/${user.phone_number.replace(/\D/g, '')}`, '_blank');
+                      }}
+                    >
+                      <span className="text-xs">💬</span>
+                    </Button>
                   </div>
                   
                   {user.domains && user.domains.length > 0 && (
@@ -179,7 +195,13 @@ export const UsersTable = ({ users, onRefresh, onEdit }: UsersTableProps) => {
                       <div>
                         <p className="text-xs text-muted-foreground mb-1">EXPIRES</p>
                         <p className="font-semibold text-foreground text-xs">
-                          {new Date(latestSub.expire_date).toLocaleDateString()}
+                          {(() => {
+                            const date = new Date(latestSub.expire_date);
+                            const day = date.getDate().toString().padStart(2, '0');
+                            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                            const year = date.getFullYear();
+                            return `${day}/${month}/${year}`;
+                          })()}
                         </p>
                       </div>
                       <div>

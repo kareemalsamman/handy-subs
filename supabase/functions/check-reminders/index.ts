@@ -47,10 +47,16 @@ serve(async (req) => {
       console.log(`Found ${oneMonthSubs.length} subscriptions expiring in 1 month`);
       
       for (const sub of oneMonthSubs) {
+        const expireDate = new Date(sub.expire_date);
+        const day = expireDate.getDate().toString().padStart(2, '0');
+        const month = (expireDate.getMonth() + 1).toString().padStart(2, '0');
+        const year = expireDate.getFullYear();
+        const formattedDate = `${day}/${month}/${year}`;
+        
         const message = `تذكير! 🔔
 عزيزي ${sub.users.username}،
 اشتراكك في ${sub.domains.domain_url} سينتهي خلال شهر واحد.
-تاريخ الانتهاء: ${new Date(sub.expire_date).toLocaleDateString('ar-EG')}
+تاريخ الانتهاء: ${formattedDate}
 المبلغ السنوي: ${sub.c_cost} ₪
 الرجاء التواصل للتجديد قريباً.`;
 
@@ -63,7 +69,7 @@ serve(async (req) => {
         await supabase.from('notifications').insert({
           type: 'subscription_expiring',
           title: 'اشتراك سينتهي خلال شهر',
-          message: `اشتراك ${sub.users.username} في ${sub.domains.domain_url} سينتهي في ${new Date(sub.expire_date).toLocaleDateString('ar-EG')}. الهاتف: ${sub.users.phone_number}`,
+          message: `اشتراك ${sub.users.username} في ${sub.domains.domain_url} سينتهي في ${formattedDate}. الهاتف: ${sub.users.phone_number}`,
           action_url: `/user/${sub.users.id}`,
           user_id: sub.users.id,
         });
@@ -94,10 +100,16 @@ serve(async (req) => {
       console.log(`Found ${oneWeekSubs.length} subscriptions expiring in 1 week`);
       
       for (const sub of oneWeekSubs) {
+        const expireDate = new Date(sub.expire_date);
+        const day = expireDate.getDate().toString().padStart(2, '0');
+        const month = (expireDate.getMonth() + 1).toString().padStart(2, '0');
+        const year = expireDate.getFullYear();
+        const formattedDate = `${day}/${month}/${year}`;
+        
         const message = `تنبيه هام! ⚠️
 عزيزي ${sub.users.username}،
 اشتراكك في ${sub.domains.domain_url} سينتهي خلال أسبوع!
-تاريخ الانتهاء: ${new Date(sub.expire_date).toLocaleDateString('ar-EG')}
+تاريخ الانتهاء: ${formattedDate}
 المبلغ السنوي: ${sub.c_cost} ₪
 يرجى التجديد في أقرب وقت.`;
 
@@ -110,7 +122,7 @@ serve(async (req) => {
         await supabase.from('notifications').insert({
           type: 'subscription_expiring',
           title: 'اشتراك سينتهي خلال أسبوع!',
-          message: `اشتراك ${sub.users.username} في ${sub.domains.domain_url} سينتهي في ${new Date(sub.expire_date).toLocaleDateString('ar-EG')}. الهاتف: ${sub.users.phone_number}`,
+          message: `اشتراك ${sub.users.username} في ${sub.domains.domain_url} سينتهي في ${formattedDate}. الهاتف: ${sub.users.phone_number}`,
           action_url: `/user/${sub.users.id}`,
           user_id: sub.users.id,
         });

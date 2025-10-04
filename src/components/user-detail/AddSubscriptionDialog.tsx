@@ -85,12 +85,19 @@ export const AddSubscriptionDialog = ({ open, onOpenChange, userId, domains, onS
         .single();
 
       if (userData && domainData) {
+        const expireDate = new Date(formData.begin_date);
+        expireDate.setFullYear(expireDate.getFullYear() + 1);
+        const day = expireDate.getDate().toString().padStart(2, '0');
+        const month = (expireDate.getMonth() + 1).toString().padStart(2, '0');
+        const year = expireDate.getFullYear();
+        const formattedDate = `${day}/${month}/${year}`;
+        
         const message = `تم استلام الدفع بنجاح! ✅
 عزيزي ${userData.username}،
 تم تسجيل دفعتك في النظام.
 النطاق: ${domainData.domain_url}
 المبلغ: ${cCost} ₪
-الاشتراك الجديد ينتهي: ${expireDate.toLocaleDateString('ar-EG')}
+الاشتراك الجديد ينتهي: ${formattedDate}
 شكراً لك! 🙏`;
 
         await supabase.functions.invoke('send-sms', {
@@ -222,10 +229,17 @@ export const AddSubscriptionDialog = ({ open, onOpenChange, userId, domains, onS
             <div className="glass p-4 rounded-lg border border-border">
               <p className="text-sm font-semibold text-foreground mb-2">Calculated:</p>
               <p className="text-xs text-muted-foreground">
-                Expire: {new Date(new Date(formData.begin_date).getTime() + 365 * 24 * 60 * 60 * 1000).toLocaleDateString()}
+                Expire: {(() => {
+                  const expireDate = new Date(formData.begin_date);
+                  expireDate.setFullYear(expireDate.getFullYear() + 1);
+                  const day = expireDate.getDate().toString().padStart(2, '0');
+                  const month = (expireDate.getMonth() + 1).toString().padStart(2, '0');
+                  const year = expireDate.getFullYear();
+                  return `${day}/${month}/${year}`;
+                })()}
               </p>
               <p className="text-xs text-success-text font-medium mt-1">
-                Profit: ₪{profit.toFixed(2)} (before server cost)
+                Profit: ₪{profit.toFixed(2)}
               </p>
             </div>
           )}

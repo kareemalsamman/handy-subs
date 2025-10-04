@@ -149,15 +149,6 @@ const UserDetail = () => {
         </div>
 
         <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <Button
-              onClick={() => window.open(`https://wa.me/${user.phone_number.replace(/\D/g, '')}`, '_blank')}
-              className="flex-1 bg-green-600 hover:bg-green-700 text-white"
-            >
-              <span className="mr-2">💬</span>
-              WhatsApp
-            </Button>
-          </div>
           <div className="flex items-center gap-2 text-white/90 justify-center">
             <span>📱</span>
             <span className="font-medium">{user.phone_number}</span>
@@ -254,13 +245,25 @@ const UserDetail = () => {
                   <div>
                     <p className="text-xs text-muted-foreground mb-1">BEGIN</p>
                     <p className="font-semibold text-foreground text-xs">
-                      {new Date(sub.begin_date).toLocaleDateString()}
+                      {(() => {
+                        const date = new Date(sub.begin_date);
+                        const day = date.getDate().toString().padStart(2, '0');
+                        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                        const year = date.getFullYear();
+                        return `${day}/${month}/${year}`;
+                      })()}
                     </p>
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground mb-1">EXPIRES</p>
                     <p className="font-semibold text-foreground text-xs">
-                      {new Date(sub.expire_date).toLocaleDateString()}
+                      {(() => {
+                        const date = new Date(sub.expire_date);
+                        const day = date.getDate().toString().padStart(2, '0');
+                        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                        const year = date.getFullYear();
+                        return `${day}/${month}/${year}`;
+                      })()}
                     </p>
                   </div>
                 </div>
