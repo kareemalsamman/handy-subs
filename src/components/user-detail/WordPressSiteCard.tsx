@@ -24,27 +24,18 @@ interface WordPressSiteCardProps {
 }
 
 export function WordPressSiteCard({ site, onUpdate }: WordPressSiteCardProps) {
-  const [checking, setChecking] = useState(false);
-  const [updating, setUpdating] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
-  const handleCheckUpdates = async () => {
-    setChecking(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('check-wordpress-updates', {
-        body: { domainId: site.id },
-      });
-
-      if (error) throw error;
-
-      toast.success("Updates checked successfully");
-      onUpdate();
-    } catch (error: any) {
-      console.error('Error checking updates:', error);
-      toast.error(error.message || "Failed to check updates");
-    } finally {
-      setChecking(false);
+  const handleCheckUpdates = () => {
+    if (!site.wordpress_secret_key) {
+      toast.error("WordPress secret key not configured");
+      return;
     }
+
+    const cleanDomain = site.domain_url.replace(/^https?:\/\//, '');
+    const updateUrl = `https://${cleanDomain}?fullupdate=true&key=${site.wordpress_secret_key}`;
+    window.open(updateUrl, '_blank');
+    toast.success("Checking updates in new window");
   };
 
   const handleUpdateNow = () => {
@@ -53,19 +44,10 @@ export function WordPressSiteCard({ site, onUpdate }: WordPressSiteCardProps) {
       return;
     }
 
-    setUpdating(true);
-    // Strip any existing protocol from domain_url
     const cleanDomain = site.domain_url.replace(/^https?:\/\//, '');
     const updateUrl = `https://${cleanDomain}?fullupdate=true&key=${site.wordpress_secret_key}`;
     window.open(updateUrl, '_blank');
-    
     toast.success("Update started in new window");
-    
-    // Auto-refresh after 5 seconds
-    setTimeout(() => {
-      handleCheckUpdates();
-      setUpdating(false);
-    }, 5000);
   };
 
   const handleDelete = async () => {
@@ -149,13 +131,9 @@ export function WordPressSiteCard({ site, onUpdate }: WordPressSiteCardProps) {
               size="sm"
               variant="outline"
               onClick={handleCheckUpdates}
-              disabled={checking || !site.wordpress_secret_key}
+              disabled={!site.wordpress_secret_key}
             >
-              {checking ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <RefreshCw className="h-4 w-4" />
-              )}
+              <RefreshCw className="h-4 w-4" />
               <span className="ml-2">Check Updates</span>
             </Button>
             
@@ -163,13 +141,9 @@ export function WordPressSiteCard({ site, onUpdate }: WordPressSiteCardProps) {
               <Button
                 size="sm"
                 onClick={handleUpdateNow}
-                disabled={updating || !site.wordpress_secret_key}
+                disabled={!site.wordpress_secret_key}
               >
-                {updating ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <ExternalLink className="h-4 w-4" />
-                )}
+                <ExternalLink className="h-4 w-4" />
                 <span className="ml-2">Update Now</span>
               </Button>
             )}
