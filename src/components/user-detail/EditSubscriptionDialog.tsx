@@ -28,9 +28,9 @@ export const EditSubscriptionDialog = ({
 }: EditSubscriptionDialogProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [beginDate, setBeginDate] = useState<Date | undefined>();
+  const [expireDate, setExpireDate] = useState<Date | undefined>();
   const [formData, setFormData] = useState({
     c_cost: "",
-    expire_date: "",
     status: "active",
     buy_domain: false,
     domain_cost: "",
@@ -40,15 +40,12 @@ export const EditSubscriptionDialog = ({
     if (subscription && open) {
       const domainCost = subscription.domain_cost || 0;
       const beginDateObj = new Date(subscription.begin_date);
-      const expireDate = new Date(subscription.expire_date);
-      const expireDay = expireDate.getDate().toString().padStart(2, '0');
-      const expireMonth = (expireDate.getMonth() + 1).toString().padStart(2, '0');
-      const expireYear = expireDate.getFullYear();
+      const expireDateObj = new Date(subscription.expire_date);
       
       setBeginDate(beginDateObj);
+      setExpireDate(expireDateObj);
       setFormData({
         c_cost: subscription.c_cost.toString(),
-        expire_date: `${expireDay}/${expireMonth}/${expireYear}`,
         status: subscription.status,
         buy_domain: subscription.buy_domain || domainCost > 0,
         domain_cost: domainCost > 0 ? domainCost.toString() : "",
@@ -59,9 +56,9 @@ export const EditSubscriptionDialog = ({
   // Auto-calculate expire date when begin date changes
   useEffect(() => {
     if (beginDate) {
-      const expireDate = new Date(beginDate);
-      expireDate.setFullYear(expireDate.getFullYear() + 1);
-      setFormData(prev => ({ ...prev, expire_date: format(expireDate, "dd/MM/yyyy") }));
+      const newExpireDate = new Date(beginDate);
+      newExpireDate.setFullYear(newExpireDate.getFullYear() + 1);
+      setExpireDate(newExpireDate);
     }
   }, [beginDate]);
 
@@ -85,8 +82,9 @@ export const EditSubscriptionDialog = ({
       const cCost = parseFloat(formData.c_cost);
       const oldStatus = subscription.status;
 
-      if (!beginDate) {
-        toast.error("Please select a begin date");
+      if (!beginDate || !expireDate) {
+        toast.error("Please select begin and expire dates");
+        setIsLoading(false);
         return;
       }
 
@@ -97,6 +95,7 @@ export const EditSubscriptionDialog = ({
           domain_cost: domainCost,
           buy_domain: formData.buy_domain,
           begin_date: beginDate.toISOString().split('T')[0],
+          expire_date: expireDate.toISOString().split('T')[0],
           status: formData.status as any,
           cancelled_at: formData.status === 'cancelled' ? new Date().toISOString() : null,
         })
@@ -188,6 +187,40 @@ export const EditSubscriptionDialog = ({
                   selected={beginDate}
                   onSelect={(date) => date && setBeginDate(date)}
                   initialFocus
+                  captionLayout="dropdown-buttons"
+                  fromYear={2020}
+                  toYear={2030}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          <div>
+            <Label htmlFor="expire_date" className="text-sm font-semibold">
+              Expire Date *
+            </Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal mt-1",
+                    !expireDate && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {expireDate ? format(expireDate, "dd/MM/yyyy") : <span>Pick a date</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0 bg-popover" align="start">
+                <Calendar
+                  mode="single"
+                  selected={expireDate}
+                  onSelect={(date) => date && setExpireDate(date)}
+                  initialFocus
+                  captionLayout="dropdown-buttons"
+                  fromYear={2020}
+                  toYear={2030}
                 />
               </PopoverContent>
             </Popover>
@@ -244,11 +277,11 @@ export const EditSubscriptionDialog = ({
             </Select>
           </div>
 
-          {formData.c_cost && beginDate && (
+          {formData.c_cost && beginDate && expireDate && (
             <div className="glass p-4 rounded-lg border border-border">
               <p className="text-sm font-semibold text-foreground mb-2">Calculated:</p>
               <p className="text-xs text-muted-foreground">
-                Expire: {formData.expire_date}
+                Period: {format(beginDate, "dd/MM/yyyy")} → {format(expireDate, "dd/MM/yyyy")}
               </p>
               <p className="text-xs text-success-text font-medium mt-1">
                 Profit: ₪{profit.toFixed(2)}

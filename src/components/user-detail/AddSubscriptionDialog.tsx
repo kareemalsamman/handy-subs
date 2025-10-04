@@ -24,12 +24,24 @@ interface AddSubscriptionDialogProps {
 export const AddSubscriptionDialog = ({ open, onOpenChange, userId, domains, onSuccess }: AddSubscriptionDialogProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [beginDate, setBeginDate] = useState<Date>(new Date());
+  const [expireDate, setExpireDate] = useState<Date>(() => {
+    const date = new Date();
+    date.setFullYear(date.getFullYear() + 1);
+    return date;
+  });
   const [formData, setFormData] = useState({
     domain_id: "",
     c_cost: "",
     buy_domain: false,
     domain_cost: "",
   });
+
+  // Auto-calculate expire date when begin date changes
+  useEffect(() => {
+    const newExpireDate = new Date(beginDate);
+    newExpireDate.setFullYear(newExpireDate.getFullYear() + 1);
+    setExpireDate(newExpireDate);
+  }, [beginDate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,9 +62,6 @@ export const AddSubscriptionDialog = ({ open, onOpenChange, userId, domains, onS
         .eq("status", "active");
 
       if (updateError) throw updateError;
-
-      const expireDate = new Date(beginDate);
-      expireDate.setFullYear(expireDate.getFullYear() + 1);
 
       const cCost = parseFloat(formData.c_cost);
       const domainCost = formData.buy_domain ? parseFloat(formData.domain_cost || "0") : 0;
@@ -88,8 +97,6 @@ export const AddSubscriptionDialog = ({ open, onOpenChange, userId, domains, onS
         .single();
 
       if (userData && domainData) {
-        const expireDate = new Date(beginDate);
-        expireDate.setFullYear(expireDate.getFullYear() + 1);
         const formattedDate = format(expireDate, "dd/MM/yyyy");
         
         const message = `تم استلام الدفع بنجاح! ✅
@@ -112,7 +119,11 @@ export const AddSubscriptionDialog = ({ open, onOpenChange, userId, domains, onS
       onOpenChange(false);
       onSuccess();
       
-      setBeginDate(new Date());
+      const newDate = new Date();
+      const newExpire = new Date();
+      newExpire.setFullYear(newExpire.getFullYear() + 1);
+      setBeginDate(newDate);
+      setExpireDate(newExpire);
       setFormData({
         domain_id: "",
         c_cost: "",
@@ -199,6 +210,40 @@ export const AddSubscriptionDialog = ({ open, onOpenChange, userId, domains, onS
                   selected={beginDate}
                   onSelect={(date) => date && setBeginDate(date)}
                   initialFocus
+                  captionLayout="dropdown-buttons"
+                  fromYear={2020}
+                  toYear={2030}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          <div>
+            <Label htmlFor="expire_date" className="text-sm font-semibold">
+              Expire Date
+            </Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal mt-2",
+                    !expireDate && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {expireDate ? format(expireDate, "dd/MM/yyyy") : <span>Pick a date</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0 bg-popover" align="start">
+                <Calendar
+                  mode="single"
+                  selected={expireDate}
+                  onSelect={(date) => date && setExpireDate(date)}
+                  initialFocus
+                  captionLayout="dropdown-buttons"
+                  fromYear={2020}
+                  toYear={2030}
                 />
               </PopoverContent>
             </Popover>
@@ -239,15 +284,11 @@ export const AddSubscriptionDialog = ({ open, onOpenChange, userId, domains, onS
             )}
           </div>
 
-          {formData.c_cost && beginDate && (
+          {formData.c_cost && beginDate && expireDate && (
             <div className="glass p-4 rounded-lg border border-border">
               <p className="text-sm font-semibold text-foreground mb-2">Calculated:</p>
               <p className="text-xs text-muted-foreground">
-                Expire: {(() => {
-                  const expireDate = new Date(beginDate);
-                  expireDate.setFullYear(expireDate.getFullYear() + 1);
-                  return format(expireDate, "dd/MM/yyyy");
-                })()}
+                Period: {format(beginDate, "dd/MM/yyyy")} → {format(expireDate, "dd/MM/yyyy")}
               </p>
               <p className="text-xs text-success-text font-medium mt-1">
                 Profit: ₪{profit.toFixed(2)}
