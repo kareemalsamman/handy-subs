@@ -40,6 +40,10 @@ interface User {
     status: string;
     created_at: string;
     domain_id: string;
+    domains?: {
+      id: string;
+      domain_url: string;
+    };
   }[];
 }
 
@@ -93,7 +97,13 @@ const UserDetail = () => {
         .select(`
           *,
           domains (*),
-          subscriptions (*)
+          subscriptions (
+            *,
+            domains (
+              id,
+              domain_url
+            )
+          )
         `)
         .eq("id", userId)
         .single();
@@ -270,6 +280,20 @@ const UserDetail = () => {
                 </div>
 
                 <div className="grid grid-cols-2 gap-3 text-sm">
+                  {user.domains && user.domains.length > 1 && sub.domains && (
+                    <div className="col-span-2">
+                      <p className="text-xs text-muted-foreground mb-1">FOR DOMAIN</p>
+                      <a
+                        href={`https://${sub.domains.domain_url}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-semibold text-primary hover:underline flex items-center gap-1 text-xs"
+                      >
+                        <ExternalLink className="h-3 w-3" />
+                        {sub.domains.domain_url}
+                      </a>
+                    </div>
+                  )}
                   <div>
                     <p className="text-xs text-muted-foreground mb-1">YEARLY PAY</p>
                     <p className="font-semibold text-foreground">₪{sub.c_cost}</p>
