@@ -63,6 +63,16 @@ const UserDetail = () => {
         .single();
 
       if (error) throw error;
+      
+      // Sort subscriptions: active first, then by created_at desc
+      if (data.subscriptions) {
+        data.subscriptions.sort((a, b) => {
+          if (a.status === 'active' && b.status !== 'active') return -1;
+          if (a.status !== 'active' && b.status === 'active') return 1;
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        });
+      }
+      
       setUser(data);
     } catch (error: any) {
       console.error("Error fetching user:", error);
@@ -139,7 +149,16 @@ const UserDetail = () => {
         </div>
 
         <div className="space-y-2">
-          <div className="flex items-center gap-2 text-white/90">
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={() => window.open(`https://wa.me/${user.phone_number.replace(/\D/g, '')}`, '_blank')}
+              className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+            >
+              <span className="mr-2">💬</span>
+              WhatsApp
+            </Button>
+          </div>
+          <div className="flex items-center gap-2 text-white/90 justify-center">
             <span>📱</span>
             <span className="font-medium">{user.phone_number}</span>
           </div>

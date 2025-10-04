@@ -114,16 +114,16 @@ const Dashboard = () => {
 
       const serverCost = settingsData?.server_monthly_cost || 0;
 
-      // Calculate stats (exclude cancelled subscriptions)
+      // Calculate stats (all subscriptions except cancelled count for revenue)
       const totalUsers = formattedUsers.length;
       
-      // Only count active subscriptions for revenue
-      const activeSubscriptions = formattedUsers.flatMap(user => 
-        (user.subscriptions || []).filter(sub => sub.status === "active")
+      // Count all non-cancelled subscriptions for revenue (active + expired + done)
+      const revenueSubscriptions = formattedUsers.flatMap(user => 
+        (user.subscriptions || []).filter(sub => sub.status !== "cancelled")
       );
       
-      const totalRevenue = activeSubscriptions.reduce((sum, sub) => sum + (sub.c_cost || 0), 0);
-      const totalDomainCosts = activeSubscriptions.reduce((sum, sub) => sum + (sub.domain_cost || 0), 0);
+      const totalRevenue = revenueSubscriptions.reduce((sum, sub) => sum + (sub.c_cost || 0), 0);
+      const totalDomainCosts = revenueSubscriptions.reduce((sum, sub) => sum + (sub.domain_cost || 0), 0);
       const totalCosts = totalDomainCosts + (serverCost * 12); // Annual server cost
       const totalProfit = totalRevenue - totalCosts;
       
