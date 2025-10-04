@@ -28,31 +28,23 @@ export function WordPressSiteCard({ site, onUpdate }: WordPressSiteCardProps) {
   const [updating, setUpdating] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
-  const handleCheckUpdates = () => {
-    if (!site.wordpress_secret_key) {
-      toast.error("WordPress secret key not configured");
-      return;
-    }
-
+  const handleCheckUpdates = async () => {
     setChecking(true);
-    // Open the update URL in a new tab instead of calling the edge function
-    const cleanDomain = site.domain_url.replace(/^https?:\/\//, '');
-    const updateUrl = `https://${cleanDomain}?fullupdate=true&key=${site.wordpress_secret_key}`;
-    window.open(updateUrl, '_blank');
+    try {
+      const { data, error } = await supabase.functions.invoke('check-wordpress-updates', {
+        body: { domainId: site.id },
+      });
 
-    toast.success("Update started in new window");
+      if (error) throw error;
 
-    // Optionally refresh status after a short delay (no user-facing error if it fails)
-    setTimeout(async () => {
-      try {
-        await supabase.functions.invoke('check-wordpress-updates', { body: { domainId: site.id } });
-        onUpdate();
-      } catch (e) {
-        console.error('Error refreshing status:', e);
-      } finally {
-        setChecking(false);
-      }
-    }, 5000);
+      toast.success("Updates checked successfully");
+      onUpdate();
+    } catch (error: any) {
+      console.error('Error checking updates:', error);
+      toast.error(error.message || "Failed to check updates");
+    } finally {
+      setChecking(false);
+    }
   };
 
   const handleUpdateNow = () => {

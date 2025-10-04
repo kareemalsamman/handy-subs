@@ -39,13 +39,15 @@ Deno.serve(async (req) => {
     // Call WordPress site to check for updates
     // Strip any existing protocol from domain_url
     const cleanDomain = domain.domain_url.replace(/^https?:\/\//, '');
-    const wpUrl = `https://${cleanDomain}?updatestatus=true&key=${domain.wordpress_secret_key}`;
+    const wpUrl = `https://${cleanDomain}?updatestatus=true&key=${domain.wordpress_secret_key}&format=json`;
     
     console.log(`Checking updates for: ${cleanDomain}`);
 
     let response = await fetch(wpUrl, {
       method: 'GET',
       headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
         'User-Agent': 'WordPress-Update-Manager/1.0',
       },
     });
@@ -54,11 +56,15 @@ Deno.serve(async (req) => {
     if (!response.ok) {
       const hasWww = cleanDomain.startsWith('www.');
       if (!hasWww) {
-        const wpUrlWithWww = `https://www.${cleanDomain}?updatestatus=true&key=${domain.wordpress_secret_key}`;
+        const wpUrlWithWww = `https://www.${cleanDomain}?updatestatus=true&key=${domain.wordpress_secret_key}&format=json`;
         console.log(`Initial request failed with status ${response.status}. Retrying with: www.${cleanDomain}`);
         response = await fetch(wpUrlWithWww, {
           method: 'GET',
-          headers: { 'User-Agent': 'WordPress-Update-Manager/1.0' },
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'User-Agent': 'WordPress-Update-Manager/1.0',
+          },
         });
       }
     }
