@@ -6,10 +6,13 @@ import { Loader2, Users, DollarSign, Building2, UserCheck, Search, Plus, Bell, L
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { StatsCard } from "@/components/dashboard/StatsCard";
 import { CompanyTabs } from "@/components/dashboard/CompanyTabs";
 import { UsersTable } from "@/components/dashboard/UsersTable";
 import { AddUserDialog } from "@/components/dashboard/AddUserDialog";
+import { EditUserDialog } from "@/components/dashboard/EditUserDialog";
+import { NotificationsModal } from "@/components/dashboard/NotificationsModal";
 
 export type User = {
   id: string;
@@ -44,6 +47,10 @@ const Dashboard = () => {
     activeUsers: 0,
   });
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     // Check authentication
@@ -52,9 +59,29 @@ const Dashboard = () => {
         navigate("/auth");
       } else {
         fetchData();
+        fetchUnreadCount();
       }
     });
   }, [navigate]);
+
+  const fetchUnreadCount = async () => {
+    try {
+      const { count, error } = await supabase
+        .from("notifications")
+        .select("*", { count: "exact", head: true })
+        .eq("is_read", false);
+
+      if (error) throw error;
+      setUnreadCount(count || 0);
+    } catch (error) {
+      console.error("Error fetching unread count:", error);
+    }
+  };
+
+  const handleEditUser = (user: User) => {
+    setSelectedUser(user);
+    setIsEditDialogOpen(true);
+  };
 
   const fetchData = async () => {
     try {
@@ -141,7 +168,7 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Hero Section with Gradient */}
-      <div className="bg-gradient-primary px-4 pt-6 pb-8 rounded-b-2xl shadow-lg">
+      <div className="gradient-primary px-4 pt-6 pb-8 rounded-b-3xl shadow-xl">
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-2xl font-bold text-white">Dashboard</h1>
@@ -215,9 +242,15 @@ const Dashboard = () => {
           <Button
             size="icon"
             variant="outline"
-            className="shrink-0 hover:bg-secondary transition-colors"
+            className="shrink-0 hover:bg-secondary transition-colors relative"
+            onClick={() => setIsNotificationsOpen(true)}
           >
             <Bell className="h-4 w-4" />
+            {unreadCount > 0 && (
+              <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-xs">
+                {unreadCount > 9 ? "9+" : unreadCount}
+              </Badge>
+            )}
           </Button>
         </div>
 
@@ -236,7 +269,7 @@ const Dashboard = () => {
           </Select>
           <Button
             onClick={() => setIsAddDialogOpen(true)}
-            className="bg-gradient-primary text-white hover:shadow-button-hover transition-all duration-normal shrink-0"
+            className="gradient-primary text-white hover:shadow-lg transition-all duration-normal shrink-0"
           >
             <Plus className="h-4 w-4 mr-1" />
             Add User
@@ -246,7 +279,7 @@ const Dashboard = () => {
 
       {/* Users Table */}
       <div className="px-4">
-        <UsersTable users={filteredUsers} onRefresh={fetchData} />
+        <UsersTable users={filteredUsers} onRefresh={fetchData} onEdit={handleEditUser} />
       </div>
 
       {/* Add User Dialog */}
@@ -254,6 +287,26 @@ const Dashboard = () => {
         open={isAddDialogOpen}
         onOpenChange={setIsAddDialogOpen}
         onSuccess={fetchData}
+      />
+
+      {/* Edit User Dialog */}
+      <EditUserDialog
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        onSuccess={() => {
+          fetchData();
+          setSelectedUser(null);
+        }}
+        user={selectedUser}
+      />
+
+      {/* Notifications Modal */}
+      <NotificationsModal
+        open={isNotificationsOpen}
+        onOpenChange={(open) => {
+          setIsNotificationsOpen(open);
+          if (!open) fetchUnreadCount();
+        }}
       />
     </div>
   );

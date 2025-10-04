@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,14 +7,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2, Plus, Trash2 } from "lucide-react";
+import { User } from "@/pages/Dashboard";
 
-interface AddUserDialogProps {
+interface EditUserDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
+  user: User | null;
 }
 
-export const AddUserDialog = ({ open, onOpenChange, onSuccess }: AddUserDialogProps) => {
+export const EditUserDialog = ({ open, onOpenChange, onSuccess, user }: EditUserDialogProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     username: "",
@@ -25,6 +27,21 @@ export const AddUserDialog = ({ open, onOpenChange, onSuccess }: AddUserDialogPr
     m_cost: "",
     begin_date: new Date().toISOString().split("T")[0],
   });
+
+  useEffect(() => {
+    if (user && open) {
+      const latestSub = user.subscriptions?.[0];
+      setFormData({
+        username: user.username,
+        company: user.company,
+        phone_number: user.phone_number,
+        domains: user.domains?.map(d => d.domain_url) || [""],
+        c_cost: latestSub?.c_cost?.toString() || "",
+        m_cost: latestSub?.m_cost?.toString() || "",
+        begin_date: latestSub?.begin_date || new Date().toISOString().split("T")[0],
+      });
+    }
+  }, [user, open]);
 
   const formatDomain = (url: string) => {
     if (!url) return "";
@@ -72,60 +89,59 @@ export const AddUserDialog = ({ open, onOpenChange, onSuccess }: AddUserDialogPr
     try {
       setIsLoading(true);
 
-      // Create user
-      const { data: userData, error: userError } = await supabase
+      // Update user
+      const { error: userError } = await supabase
         .from("users")
-        .insert([{
+        .update({
           username: formData.username,
           company: formData.company as any,
           phone_number: formData.phone_number,
-        }])
-        .select()
-        .single();
+        })
+        .eq("id", user!.id);
 
       if (userError) throw userError;
 
-      // Create domains
+      // Delete old domains
+      const { error: deleteDomainsError } = await supabase
+        .from("domains")
+        .delete()
+        .eq("user_id", user!.id);
+
+      if (deleteDomainsError) throw deleteDomainsError;
+
+      // Insert new domains
       const domainsToInsert = validDomains.map(d => ({
-        user_id: userData.id,
+        user_id: user!.id,
         domain_url: formatDomain(d),
       }));
 
-      const { error: domainError } = await supabase
+      const { error: domainsError } = await supabase
         .from("domains")
         .insert(domainsToInsert);
 
-      if (domainError) throw domainError;
+      if (domainsError) throw domainsError;
 
-      // Create subscription
-      const { error: subError } = await supabase
-        .from("subscriptions")
-        .insert({
-          user_id: userData.id,
-          c_cost: parseFloat(formData.c_cost),
-          m_cost: parseFloat(formData.m_cost),
-          begin_date: formData.begin_date,
-        });
+      // Update latest subscription if exists
+      const latestSub = user?.subscriptions?.[0];
+      if (latestSub) {
+        const { error: subError } = await supabase
+          .from("subscriptions")
+          .update({
+            c_cost: parseFloat(formData.c_cost),
+            m_cost: parseFloat(formData.m_cost),
+            begin_date: formData.begin_date,
+          })
+          .eq("id", latestSub.id);
 
-      if (subError) throw subError;
+        if (subError) throw subError;
+      }
 
-      toast.success("User added successfully!");
+      toast.success("User updated successfully!");
       onSuccess();
       onOpenChange(false);
-      
-      // Reset form
-      setFormData({
-        username: "",
-        company: "Ajad",
-        phone_number: "",
-        domains: [""],
-        c_cost: "",
-        m_cost: "",
-        begin_date: new Date().toISOString().split("T")[0],
-      });
     } catch (error: any) {
-      console.error("Error adding user:", error);
-      toast.error(error.message || "Failed to add user");
+      console.error("Error updating user:", error);
+      toast.error(error.message || "Failed to update user");
     } finally {
       setIsLoading(false);
     }
@@ -136,7 +152,7 @@ export const AddUserDialog = ({ open, onOpenChange, onSuccess }: AddUserDialogPr
       <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto glass-strong">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-foreground">
-            Add New User
+            Edit User
           </DialogTitle>
         </DialogHeader>
 
@@ -295,7 +311,7 @@ export const AddUserDialog = ({ open, onOpenChange, onSuccess }: AddUserDialogPr
                   Saving...
                 </>
               ) : (
-                "Save User"
+                "Update User"
               )}
             </Button>
           </div>
