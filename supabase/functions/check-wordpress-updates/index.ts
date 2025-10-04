@@ -37,9 +37,11 @@ Deno.serve(async (req) => {
     }
 
     // Call WordPress site to check for updates
-    const wpUrl = `https://${domain.domain_url}?updatestatus=true&key=${domain.wordpress_secret_key}`;
+    // Strip any existing protocol from domain_url
+    const cleanDomain = domain.domain_url.replace(/^https?:\/\//, '');
+    const wpUrl = `https://${cleanDomain}?updatestatus=true&key=${domain.wordpress_secret_key}`;
     
-    console.log(`Checking updates for: ${domain.domain_url}`);
+    console.log(`Checking updates for: ${cleanDomain}`);
 
     const response = await fetch(wpUrl, {
       method: 'GET',

@@ -54,7 +54,9 @@ export function WordPressSiteCard({ site, onUpdate }: WordPressSiteCardProps) {
     }
 
     setUpdating(true);
-    const updateUrl = `https://${site.domain_url}?fullupdate=true&key=${site.wordpress_secret_key}`;
+    // Strip any existing protocol from domain_url
+    const cleanDomain = site.domain_url.replace(/^https?:\/\//, '');
+    const updateUrl = `https://${cleanDomain}?fullupdate=true&key=${site.wordpress_secret_key}`;
     window.open(updateUrl, '_blank');
     
     toast.success("Update started in new window");

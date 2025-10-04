@@ -47,9 +47,11 @@ Deno.serve(async (req) => {
 
     for (const domain of domains) {
       try {
-        const updateUrl = `https://${domain.domain_url}?fullupdate=true&key=${domain.wordpress_secret_key}`;
+        // Strip any existing protocol from domain_url
+        const cleanDomain = domain.domain_url.replace(/^https?:\/\//, '');
+        const updateUrl = `https://${cleanDomain}?fullupdate=true&key=${domain.wordpress_secret_key}`;
         
-        console.log(`Triggering update for: ${domain.domain_url}`);
+        console.log(`Triggering update for: ${cleanDomain}`);
 
         const response = await fetch(updateUrl, {
           method: 'GET',
