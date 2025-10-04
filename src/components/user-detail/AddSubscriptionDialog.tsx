@@ -1,13 +1,17 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { CalendarIcon, Loader2 } from "lucide-react";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 interface AddSubscriptionDialogProps {
   open: boolean;
@@ -19,10 +23,10 @@ interface AddSubscriptionDialogProps {
 
 export const AddSubscriptionDialog = ({ open, onOpenChange, userId, domains, onSuccess }: AddSubscriptionDialogProps) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [beginDate, setBeginDate] = useState<Date>(new Date());
   const [formData, setFormData] = useState({
     domain_id: "",
     c_cost: "",
-    begin_date: new Date().toISOString().split("T")[0],
     buy_domain: false,
     domain_cost: "",
   });
@@ -47,7 +51,6 @@ export const AddSubscriptionDialog = ({ open, onOpenChange, userId, domains, onS
 
       if (updateError) throw updateError;
 
-      const beginDate = new Date(formData.begin_date);
       const expireDate = new Date(beginDate);
       expireDate.setFullYear(expireDate.getFullYear() + 1);
 
@@ -85,12 +88,9 @@ export const AddSubscriptionDialog = ({ open, onOpenChange, userId, domains, onS
         .single();
 
       if (userData && domainData) {
-        const expireDate = new Date(formData.begin_date);
+        const expireDate = new Date(beginDate);
         expireDate.setFullYear(expireDate.getFullYear() + 1);
-        const day = expireDate.getDate().toString().padStart(2, '0');
-        const month = (expireDate.getMonth() + 1).toString().padStart(2, '0');
-        const year = expireDate.getFullYear();
-        const formattedDate = `${day}/${month}/${year}`;
+        const formattedDate = format(expireDate, "dd/MM/yyyy");
         
         const message = `تم استلام الدفع بنجاح! ✅
 عزيزي ${userData.username}،
@@ -112,10 +112,10 @@ export const AddSubscriptionDialog = ({ open, onOpenChange, userId, domains, onS
       onOpenChange(false);
       onSuccess();
       
+      setBeginDate(new Date());
       setFormData({
         domain_id: "",
         c_cost: "",
-        begin_date: new Date().toISOString().split("T")[0],
         buy_domain: false,
         domain_cost: "",
       });
@@ -180,14 +180,28 @@ export const AddSubscriptionDialog = ({ open, onOpenChange, userId, domains, onS
             <Label htmlFor="begin_date" className="text-sm font-semibold">
               Begin Date
             </Label>
-            <Input
-              id="begin_date"
-              type="date"
-              value={formData.begin_date}
-              onChange={(e) => setFormData({ ...formData, begin_date: e.target.value })}
-              className="mt-2"
-              required
-            />
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal mt-2",
+                    !beginDate && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {beginDate ? format(beginDate, "dd/MM/yyyy") : <span>Pick a date</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0 bg-popover" align="start">
+                <Calendar
+                  mode="single"
+                  selected={beginDate}
+                  onSelect={(date) => date && setBeginDate(date)}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
           </div>
 
           <div className="glass p-4 rounded-xl space-y-3">
@@ -225,17 +239,14 @@ export const AddSubscriptionDialog = ({ open, onOpenChange, userId, domains, onS
             )}
           </div>
 
-          {formData.c_cost && (
+          {formData.c_cost && beginDate && (
             <div className="glass p-4 rounded-lg border border-border">
               <p className="text-sm font-semibold text-foreground mb-2">Calculated:</p>
               <p className="text-xs text-muted-foreground">
                 Expire: {(() => {
-                  const expireDate = new Date(formData.begin_date);
+                  const expireDate = new Date(beginDate);
                   expireDate.setFullYear(expireDate.getFullYear() + 1);
-                  const day = expireDate.getDate().toString().padStart(2, '0');
-                  const month = (expireDate.getMonth() + 1).toString().padStart(2, '0');
-                  const year = expireDate.getFullYear();
-                  return `${day}/${month}/${year}`;
+                  return format(expireDate, "dd/MM/yyyy");
                 })()}
               </p>
               <p className="text-xs text-success-text font-medium mt-1">

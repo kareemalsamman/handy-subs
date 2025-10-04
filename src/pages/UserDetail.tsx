@@ -67,8 +67,10 @@ const UserDetail = () => {
       // Sort subscriptions: active first, then by created_at desc
       if (data.subscriptions) {
         data.subscriptions.sort((a, b) => {
+          // Active always comes first
           if (a.status === 'active' && b.status !== 'active') return -1;
           if (a.status !== 'active' && b.status === 'active') return 1;
+          // If both have same status, sort by created_at (newest first)
           return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
         });
       }

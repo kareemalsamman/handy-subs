@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2, ExternalLink, Eye } from "lucide-react";
+import { Edit, Trash2, ExternalLink, Eye, MessageCircle } from "lucide-react";
 import { User } from "@/pages/Dashboard";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
@@ -158,7 +158,7 @@ export const UsersTable = ({ users, onRefresh, onEdit }: UsersTableProps) => {
                         window.open(`https://wa.me/${user.phone_number.replace(/\D/g, '')}`, '_blank');
                       }}
                     >
-                      <span className="text-xs">💬</span>
+                      <MessageCircle className="h-4 w-4" />
                     </Button>
                   </div>
                   
