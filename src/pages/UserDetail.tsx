@@ -22,12 +22,13 @@ interface User {
   subscriptions: {
     id: string;
     c_cost: number;
-    m_cost: number;
-    profit: number;
+    domain_cost: number;
+    buy_domain?: boolean;
     begin_date: string;
     expire_date: string;
     status: string;
     created_at: string;
+    domain_id: string;
   }[];
 }
 
@@ -222,16 +223,14 @@ const UserDetail = () => {
 
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div>
-                    <p className="text-xs text-muted-foreground mb-1">C-COST</p>
+                    <p className="text-xs text-muted-foreground mb-1">YEARLY PAY</p>
                     <p className="font-semibold text-foreground">₪{sub.c_cost}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground mb-1">M-COST</p>
-                    <p className="font-semibold text-foreground">₪{sub.m_cost}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-1">PROFIT</p>
-                    <p className="font-semibold text-success-text">₪{sub.profit?.toFixed(2)}</p>
+                    <p className="text-xs text-muted-foreground mb-1">DOMAIN</p>
+                    <p className="font-semibold text-foreground">
+                      {sub.buy_domain ? `YES - ₪${sub.domain_cost || 0}` : 'NO'}
+                    </p>
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground mb-1">BEGIN</p>
@@ -239,7 +238,7 @@ const UserDetail = () => {
                       {new Date(sub.begin_date).toLocaleDateString()}
                     </p>
                   </div>
-                  <div className="col-span-2">
+                  <div>
                     <p className="text-xs text-muted-foreground mb-1">EXPIRES</p>
                     <p className="font-semibold text-foreground text-xs">
                       {new Date(sub.expire_date).toLocaleDateString()}
@@ -269,6 +268,7 @@ const UserDetail = () => {
         open={isAddSubOpen}
         onOpenChange={setIsAddSubOpen}
         userId={user.id}
+        domains={user.domains}
         onSuccess={fetchUser}
       />
 

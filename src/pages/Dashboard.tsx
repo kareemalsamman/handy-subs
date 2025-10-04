@@ -24,11 +24,12 @@ export type User = {
   subscriptions: {
     id: string;
     c_cost: number;
-    m_cost: number;
-    profit: number;
+    domain_cost: number;
+    buy_domain?: boolean;
     begin_date: string;
     expire_date: string;
     status: string;
+    domain_id: string;
   }[];
 };
 

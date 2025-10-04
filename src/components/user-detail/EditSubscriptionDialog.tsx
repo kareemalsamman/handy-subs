@@ -25,7 +25,6 @@ export const EditSubscriptionDialog = ({
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     c_cost: "",
-    m_cost: "",
     begin_date: "",
     status: "active",
     buy_domain: false,
@@ -37,10 +36,9 @@ export const EditSubscriptionDialog = ({
       const domainCost = subscription.domain_cost || 0;
       setFormData({
         c_cost: subscription.c_cost.toString(),
-        m_cost: subscription.m_cost.toString(),
         begin_date: subscription.begin_date,
         status: subscription.status,
-        buy_domain: domainCost > 0,
+        buy_domain: subscription.buy_domain || domainCost > 0,
         domain_cost: domainCost > 0 ? domainCost.toString() : "",
       });
     }
@@ -49,7 +47,7 @@ export const EditSubscriptionDialog = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.c_cost || !formData.m_cost) {
+    if (!formData.c_cost) {
       toast.error("Please fill in all required fields");
       return;
     }
@@ -64,18 +62,15 @@ export const EditSubscriptionDialog = ({
 
       const domainCost = formData.buy_domain ? parseFloat(formData.domain_cost) : 0;
       const cCost = parseFloat(formData.c_cost);
-      const mCost = parseFloat(formData.m_cost);
-      const calculatedProfit = cCost - (mCost * 12) - domainCost;
 
       const { error } = await supabase
         .from("subscriptions")
         .update({
           c_cost: cCost,
-          m_cost: mCost,
           domain_cost: domainCost,
+          buy_domain: formData.buy_domain,
           begin_date: formData.begin_date,
           status: formData.status as any,
-          profit: calculatedProfit,
         })
         .eq("id", subscription.id);
 
@@ -92,43 +87,31 @@ export const EditSubscriptionDialog = ({
     }
   };
 
+  const profit = formData.c_cost
+    ? parseFloat(formData.c_cost) - (formData.buy_domain ? parseFloat(formData.domain_cost || "0") : 0)
+    : 0;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="glass-strong max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold">Edit Subscription</DialogTitle>
+          <DialogTitle className="text-xl font-bold">Edit Payment</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label htmlFor="c_cost" className="text-sm font-semibold">
-                C-COST (Yearly ₪) *
-              </Label>
-              <Input
-                id="c_cost"
-                type="number"
-                step="0.01"
-                value={formData.c_cost}
-                onChange={(e) => setFormData({ ...formData, c_cost: e.target.value })}
-                className="mt-1"
-                required
-              />
-            </div>
-            <div>
-              <Label htmlFor="m_cost" className="text-sm font-semibold">
-                M-COST (Monthly ₪) *
-              </Label>
-              <Input
-                id="m_cost"
-                type="number"
-                step="0.01"
-                value={formData.m_cost}
-                onChange={(e) => setFormData({ ...formData, m_cost: e.target.value })}
-                className="mt-1"
-                required
-              />
-            </div>
+          <div>
+            <Label htmlFor="c_cost" className="text-sm font-semibold">
+              Customer Yearly Cost (₪) *
+            </Label>
+            <Input
+              id="c_cost"
+              type="number"
+              step="0.01"
+              value={formData.c_cost}
+              onChange={(e) => setFormData({ ...formData, c_cost: e.target.value })}
+              className="mt-1"
+              required
+            />
           </div>
 
           <div>
@@ -196,6 +179,18 @@ export const EditSubscriptionDialog = ({
             </Select>
           </div>
 
+          {formData.c_cost && (
+            <div className="glass p-4 rounded-lg border border-border">
+              <p className="text-sm font-semibold text-foreground mb-2">Calculated:</p>
+              <p className="text-xs text-muted-foreground">
+                Expire: {new Date(new Date(formData.begin_date).getTime() + 365 * 24 * 60 * 60 * 1000).toLocaleDateString()}
+              </p>
+              <p className="text-xs text-success-text font-medium mt-1">
+                Profit: ₪{profit.toFixed(2)} (before server cost)
+              </p>
+            </div>
+          )}
+
           <div className="flex gap-2 pt-2">
             <Button
               type="button"
@@ -217,7 +212,7 @@ export const EditSubscriptionDialog = ({
                   Updating...
                 </>
               ) : (
-                "Update"
+                "Update Payment"
               )}
             </Button>
           </div>

@@ -149,10 +149,9 @@ export type Database = {
           cancelled_reason: string | null
           created_at: string
           domain_cost: number | null
+          domain_id: string
           expire_date: string | null
           id: string
-          m_cost: number
-          profit: number | null
           status: Database["public"]["Enums"]["subscription_status"]
           updated_at: string
           user_id: string
@@ -164,10 +163,9 @@ export type Database = {
           cancelled_reason?: string | null
           created_at?: string
           domain_cost?: number | null
+          domain_id: string
           expire_date?: string | null
           id?: string
-          m_cost: number
-          profit?: number | null
           status?: Database["public"]["Enums"]["subscription_status"]
           updated_at?: string
           user_id: string
@@ -179,15 +177,21 @@ export type Database = {
           cancelled_reason?: string | null
           created_at?: string
           domain_cost?: number | null
+          domain_id?: string
           expire_date?: string | null
           id?: string
-          m_cost?: number
-          profit?: number | null
           status?: Database["public"]["Enums"]["subscription_status"]
           updated_at?: string
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "subscriptions_domain_id_fkey"
+            columns: ["domain_id"]
+            isOneToOne: false
+            referencedRelation: "domains"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "subscriptions_user_id_fkey"
             columns: ["user_id"]
@@ -229,6 +233,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_monthly_cost_per_user: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
       update_subscription_status: {
         Args: Record<PropertyKey, never>
         Returns: undefined

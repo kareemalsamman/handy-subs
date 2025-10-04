@@ -20,25 +20,18 @@ export const EditUserDialog = ({ open, onOpenChange, onSuccess, user }: EditUser
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     username: "",
-    company: "Ajad",
+    company: "Others",
     phone_number: "",
     domains: [""],
-    c_cost: "",
-    m_cost: "",
-    begin_date: new Date().toISOString().split("T")[0],
   });
 
   useEffect(() => {
     if (user && open) {
-      const latestSub = user.subscriptions?.[0];
       setFormData({
         username: user.username,
         company: user.company,
         phone_number: user.phone_number,
-        domains: user.domains?.map(d => d.domain_url) || [""],
-        c_cost: latestSub?.c_cost?.toString() || "",
-        m_cost: latestSub?.m_cost?.toString() || "",
-        begin_date: latestSub?.begin_date || new Date().toISOString().split("T")[0],
+        domains: user.domains?.map(d => d.domain_url.replace(/^https?:\/\//, '')) || [""],
       });
     }
   }, [user, open]);
@@ -75,7 +68,7 @@ export const EditUserDialog = ({ open, onOpenChange, onSuccess, user }: EditUser
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.username || !formData.phone_number || !formData.c_cost || !formData.m_cost) {
+    if (!formData.username || !formData.phone_number) {
       toast.error("Please fill in all required fields");
       return;
     }
@@ -121,21 +114,6 @@ export const EditUserDialog = ({ open, onOpenChange, onSuccess, user }: EditUser
 
       if (domainsError) throw domainsError;
 
-      // Update latest subscription if exists
-      const latestSub = user?.subscriptions?.[0];
-      if (latestSub) {
-        const { error: subError } = await supabase
-          .from("subscriptions")
-          .update({
-            c_cost: parseFloat(formData.c_cost),
-            m_cost: parseFloat(formData.m_cost),
-            begin_date: formData.begin_date,
-          })
-          .eq("id", latestSub.id);
-
-        if (subError) throw subError;
-      }
-
       toast.success("User updated successfully!");
       onSuccess();
       onOpenChange(false);
@@ -176,11 +154,9 @@ export const EditUserDialog = ({ open, onOpenChange, onSuccess, user }: EditUser
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="bg-popover z-50">
-                <SelectItem value="Ajad">Ajad</SelectItem>
-                <SelectItem value="Soft">Soft</SelectItem>
-                <SelectItem value="Spex">Spex</SelectItem>
-                <SelectItem value="Almas">Almas</SelectItem>
                 <SelectItem value="Others">Others</SelectItem>
+                <SelectItem value="R-Server">R-Server</SelectItem>
+                <SelectItem value="Server">Server</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -236,59 +212,6 @@ export const EditUserDialog = ({ open, onOpenChange, onSuccess, user }: EditUser
             </Button>
             <p className="text-xs text-muted-foreground mt-1">https:// will be added automatically</p>
           </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label htmlFor="c_cost" className="text-sm font-semibold">C-COST (₪) *</Label>
-              <Input
-                id="c_cost"
-                type="number"
-                step="0.01"
-                value={formData.c_cost}
-                onChange={(e) => setFormData({ ...formData, c_cost: e.target.value })}
-                placeholder="0.00"
-                className="mt-1"
-                required
-              />
-            </div>
-            <div>
-              <Label htmlFor="m_cost" className="text-sm font-semibold">M-COST (₪) *</Label>
-              <Input
-                id="m_cost"
-                type="number"
-                step="0.01"
-                value={formData.m_cost}
-                onChange={(e) => setFormData({ ...formData, m_cost: e.target.value })}
-                placeholder="0.00"
-                className="mt-1"
-                required
-              />
-            </div>
-          </div>
-
-          <div>
-            <Label htmlFor="begin_date" className="text-sm font-semibold">Begin Date *</Label>
-            <Input
-              id="begin_date"
-              type="date"
-              value={formData.begin_date}
-              onChange={(e) => setFormData({ ...formData, begin_date: e.target.value })}
-              className="mt-1"
-              required
-            />
-          </div>
-
-          {formData.c_cost && formData.m_cost && (
-            <div className="p-4 glass rounded-lg border border-border">
-              <p className="text-sm font-semibold text-foreground mb-2">Auto-calculated:</p>
-              <p className="text-xs text-muted-foreground">
-                Expire Date: {new Date(new Date(formData.begin_date).getTime() + 365 * 24 * 60 * 60 * 1000).toLocaleDateString()}
-              </p>
-              <p className="text-xs text-success-text font-medium">
-                Profit: ₪{(parseFloat(formData.c_cost) - parseFloat(formData.m_cost) * 12).toFixed(2)}
-              </p>
-            </div>
-          )}
 
           <div className="flex gap-2 pt-4">
             <Button
