@@ -46,6 +46,8 @@ const Dashboard = () => {
     totalRevenue: 0,
     totalCompanies: 5,
     activeUsers: 0,
+    totalCosts: 0,
+    totalProfit: 0,
   });
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -104,13 +106,27 @@ const Dashboard = () => {
       setUsers(formattedUsers);
       setFilteredUsers(formattedUsers);
 
-      // Calculate stats
+      // Fetch settings for server cost
+      const { data: settingsData } = await supabase
+        .from("settings")
+        .select("server_monthly_cost")
+        .single();
+
+      const serverCost = settingsData?.server_monthly_cost || 0;
+
+      // Calculate stats (exclude cancelled subscriptions)
       const totalUsers = formattedUsers.length;
-      const totalRevenue = formattedUsers.reduce((sum, user) => {
-        return sum + (user.subscriptions || []).reduce((subSum, sub) => {
-          return subSum + (sub.c_cost || 0);
-        }, 0);
-      }, 0);
+      
+      // Only count active subscriptions for revenue
+      const activeSubscriptions = formattedUsers.flatMap(user => 
+        (user.subscriptions || []).filter(sub => sub.status === "active")
+      );
+      
+      const totalRevenue = activeSubscriptions.reduce((sum, sub) => sum + (sub.c_cost || 0), 0);
+      const totalDomainCosts = activeSubscriptions.reduce((sum, sub) => sum + (sub.domain_cost || 0), 0);
+      const totalCosts = totalDomainCosts + (serverCost * 12); // Annual server cost
+      const totalProfit = totalRevenue - totalCosts;
+      
       const activeUsers = formattedUsers.filter(user => 
         user.subscriptions?.some(sub => sub.status === "active")
       ).length;
@@ -120,6 +136,8 @@ const Dashboard = () => {
         totalRevenue,
         totalCompanies: 5,
         activeUsers,
+        totalCosts,
+        totalProfit,
       });
     } catch (error: any) {
       console.error("Error fetching data:", error);
@@ -219,15 +237,15 @@ const Dashboard = () => {
           />
           <StatsCard
             icon={<Building2 className="h-5 w-5" />}
-            label="Companies"
-            value={stats.totalCompanies}
-            iconBg="bg-purple-500"
+            label="Total Costs"
+            value={`₪${stats.totalCosts.toFixed(0)}`}
+            iconBg="bg-red-500"
           />
           <StatsCard
-            icon={<UserCheck className="h-5 w-5" />}
-            label="Active Users"
-            value={stats.activeUsers}
-            iconBg="bg-orange-500"
+            icon={<DollarSign className="h-5 w-5" />}
+            label="Net Profit"
+            value={`₪${stats.totalProfit.toFixed(0)}`}
+            iconBg="bg-emerald-500"
           />
         </div>
       </div>

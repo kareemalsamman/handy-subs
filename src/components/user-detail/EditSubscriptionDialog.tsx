@@ -62,6 +62,7 @@ export const EditSubscriptionDialog = ({
 
       const domainCost = formData.buy_domain ? parseFloat(formData.domain_cost) : 0;
       const cCost = parseFloat(formData.c_cost);
+      const oldStatus = subscription.status;
 
       const { error } = await supabase
         .from("subscriptions")
@@ -71,10 +72,34 @@ export const EditSubscriptionDialog = ({
           buy_domain: formData.buy_domain,
           begin_date: formData.begin_date,
           status: formData.status as any,
+          cancelled_at: formData.status === 'cancelled' ? new Date().toISOString() : null,
         })
         .eq("id", subscription.id);
 
       if (error) throw error;
+
+      // Send SMS if status changed to cancelled
+      if (oldStatus !== 'cancelled' && formData.status === 'cancelled') {
+        const { data: subData } = await supabase
+          .from('subscriptions')
+          .select('user_id, domain_id, domains(domain_url), users(username, phone_number)')
+          .eq('id', subscription.id)
+          .single();
+
+        if (subData?.users && subData?.domains) {
+          const message = `تم إلغاء الاشتراك ❌
+عزيزي ${subData.users.username}،
+تم إلغاء اشتراكك في ${subData.domains.domain_url}.
+إذا كان هناك خطأ، يرجى التواصل معنا.`;
+
+          await supabase.functions.invoke('send-sms', {
+            body: {
+              phone: subData.users.phone_number,
+              message: message
+            }
+          });
+        }
+      }
 
       toast.success("Subscription updated successfully!");
       onSuccess();

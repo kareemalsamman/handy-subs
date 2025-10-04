@@ -254,7 +254,7 @@ export type Database = {
         | "subscription_expiring"
         | "system_alert"
       sms_status: "success" | "failed" | "pending"
-      subscription_status: "active" | "expired" | "cancelled"
+      subscription_status: "active" | "expired" | "cancelled" | "done"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -391,7 +391,7 @@ export const Constants = {
         "system_alert",
       ],
       sms_status: ["success", "failed", "pending"],
-      subscription_status: ["active", "expired", "cancelled"],
+      subscription_status: ["active", "expired", "cancelled", "done"],
     },
   },
 } as const

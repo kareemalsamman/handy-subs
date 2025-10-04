@@ -38,6 +38,15 @@ export const AddSubscriptionDialog = ({ open, onOpenChange, userId, domains, onS
     setIsLoading(true);
 
     try {
+      // Mark old active subscriptions for this domain as "done"
+      const { error: updateError } = await supabase
+        .from("subscriptions")
+        .update({ status: "done" })
+        .eq("domain_id", formData.domain_id)
+        .eq("status", "active");
+
+      if (updateError) throw updateError;
+
       const beginDate = new Date(formData.begin_date);
       const expireDate = new Date(beginDate);
       expireDate.setFullYear(expireDate.getFullYear() + 1);
