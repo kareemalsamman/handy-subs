@@ -194,6 +194,7 @@ export const EditSubscriptionDialog = ({
                   mode="single"
                   selected={beginDate}
                   onSelect={(date) => date && setBeginDate(date)}
+                  defaultMonth={beginDate}
                   initialFocus
                   captionLayout="dropdown-buttons"
                   fromYear={2020}
@@ -225,6 +226,7 @@ export const EditSubscriptionDialog = ({
                   mode="single"
                   selected={expireDate}
                   onSelect={(date) => date && setExpireDate(date)}
+                  defaultMonth={expireDate}
                   initialFocus
                   captionLayout="dropdown-buttons"
                   fromYear={2020}

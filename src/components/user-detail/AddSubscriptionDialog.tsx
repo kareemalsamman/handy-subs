@@ -36,6 +36,13 @@ export const AddSubscriptionDialog = ({ open, onOpenChange, userId, domains, onS
     domain_cost: "",
   });
 
+  // Auto-select domain if only one domain available
+  useEffect(() => {
+    if (domains.length === 1 && !formData.domain_id) {
+      setFormData(prev => ({ ...prev, domain_id: domains[0].id }));
+    }
+  }, [domains, formData.domain_id]);
+
   // Auto-calculate expire date when begin date changes
   useEffect(() => {
     const newExpireDate = new Date(beginDate);

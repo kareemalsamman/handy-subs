@@ -138,9 +138,9 @@ const Dashboard = () => {
       // Calculate stats (all subscriptions except cancelled count for revenue)
       const totalUsers = formattedUsers.length;
       
-      // Count all non-cancelled subscriptions for revenue (active + expired + done)
+      // Count only active subscriptions for revenue
       const revenueSubscriptions = formattedUsers.flatMap(user => 
-        (user.subscriptions || []).filter(sub => sub.status !== "cancelled")
+        (user.subscriptions || []).filter(sub => sub.status === "active")
       );
       
       const totalRevenue = revenueSubscriptions.reduce((sum, sub) => sum + (sub.c_cost || 0), 0);
