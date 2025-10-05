@@ -29,6 +29,8 @@ export const AddSubscriptionDialog = ({ open, onOpenChange, userId, domains, onS
     date.setFullYear(date.getFullYear() + 1);
     return date;
   });
+  const [beginDateOpen, setBeginDateOpen] = useState(false);
+  const [expireDateOpen, setExpireDateOpen] = useState(false);
   const [formData, setFormData] = useState({
     domain_id: "",
     c_cost: "",
@@ -206,7 +208,7 @@ export const AddSubscriptionDialog = ({ open, onOpenChange, userId, domains, onS
             <Label htmlFor="begin_date" className="text-sm font-semibold">
               Begin Date
             </Label>
-            <Popover>
+            <Popover open={beginDateOpen} onOpenChange={setBeginDateOpen}>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
@@ -223,7 +225,12 @@ export const AddSubscriptionDialog = ({ open, onOpenChange, userId, domains, onS
                 <Calendar
                   mode="single"
                   selected={beginDate}
-                  onSelect={(date) => date && setBeginDate(date)}
+                  onSelect={(date) => {
+                    if (date) {
+                      setBeginDate(date);
+                      setBeginDateOpen(false);
+                    }
+                  }}
                   initialFocus
                   captionLayout="dropdown-buttons"
                   fromYear={2020}
@@ -237,7 +244,7 @@ export const AddSubscriptionDialog = ({ open, onOpenChange, userId, domains, onS
             <Label htmlFor="expire_date" className="text-sm font-semibold">
               Expire Date
             </Label>
-            <Popover>
+            <Popover open={expireDateOpen} onOpenChange={setExpireDateOpen}>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
@@ -254,7 +261,12 @@ export const AddSubscriptionDialog = ({ open, onOpenChange, userId, domains, onS
                 <Calendar
                   mode="single"
                   selected={expireDate}
-                  onSelect={(date) => date && setExpireDate(date)}
+                  onSelect={(date) => {
+                    if (date) {
+                      setExpireDate(date);
+                      setExpireDateOpen(false);
+                    }
+                  }}
                   initialFocus
                   captionLayout="dropdown-buttons"
                   fromYear={2020}

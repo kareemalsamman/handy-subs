@@ -29,6 +29,8 @@ export const EditSubscriptionDialog = ({
   const [isLoading, setIsLoading] = useState(false);
   const [beginDate, setBeginDate] = useState<Date | undefined>();
   const [expireDate, setExpireDate] = useState<Date | undefined>();
+  const [beginDateOpen, setBeginDateOpen] = useState(false);
+  const [expireDateOpen, setExpireDateOpen] = useState(false);
   const [formData, setFormData] = useState({
     c_cost: "",
     status: "active",
@@ -176,7 +178,7 @@ export const EditSubscriptionDialog = ({
             <Label htmlFor="begin_date" className="text-sm font-semibold">
               Begin Date *
             </Label>
-            <Popover>
+            <Popover open={beginDateOpen} onOpenChange={setBeginDateOpen}>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
@@ -193,7 +195,12 @@ export const EditSubscriptionDialog = ({
                 <Calendar
                   mode="single"
                   selected={beginDate}
-                  onSelect={(date) => date && setBeginDate(date)}
+                  onSelect={(date) => {
+                    if (date) {
+                      setBeginDate(date);
+                      setBeginDateOpen(false);
+                    }
+                  }}
                   defaultMonth={beginDate}
                   initialFocus
                   captionLayout="dropdown-buttons"
@@ -208,7 +215,7 @@ export const EditSubscriptionDialog = ({
             <Label htmlFor="expire_date" className="text-sm font-semibold">
               Expire Date *
             </Label>
-            <Popover>
+            <Popover open={expireDateOpen} onOpenChange={setExpireDateOpen}>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
@@ -225,7 +232,12 @@ export const EditSubscriptionDialog = ({
                 <Calendar
                   mode="single"
                   selected={expireDate}
-                  onSelect={(date) => date && setExpireDate(date)}
+                  onSelect={(date) => {
+                    if (date) {
+                      setExpireDate(date);
+                      setExpireDateOpen(false);
+                    }
+                  }}
                   defaultMonth={expireDate}
                   initialFocus
                   captionLayout="dropdown-buttons"
