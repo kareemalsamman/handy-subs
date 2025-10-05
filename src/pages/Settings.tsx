@@ -17,6 +17,7 @@ const Settings = () => {
     server_monthly_cost: "504",
     admin_phone: "0525143581",
     auto_messages_enabled: true,
+    admin_pin: "1997",
   });
   const [financialStats, setFinancialStats] = useState({
     totalRevenue: 0,
@@ -44,6 +45,7 @@ const Settings = () => {
           server_monthly_cost: data.server_monthly_cost.toString(),
           admin_phone: data.admin_phone,
           auto_messages_enabled: data.auto_messages_enabled ?? true,
+          admin_pin: data.admin_pin || "1997",
         });
         
         // Calculate financial stats
@@ -100,6 +102,7 @@ const Settings = () => {
             server_monthly_cost: parseFloat(settings.server_monthly_cost),
             admin_phone: settings.admin_phone,
             auto_messages_enabled: settings.auto_messages_enabled,
+            admin_pin: settings.admin_pin,
           })
           .eq("id", existingSettings.id);
 
@@ -111,6 +114,7 @@ const Settings = () => {
             server_monthly_cost: parseFloat(settings.server_monthly_cost),
             admin_phone: settings.admin_phone,
             auto_messages_enabled: settings.auto_messages_enabled,
+            admin_pin: settings.admin_pin,
           });
 
         if (error) throw error;
@@ -198,6 +202,27 @@ const Settings = () => {
               />
               <p className="text-xs text-muted-foreground mt-1">
                 Phone number for admin notifications
+              </p>
+            </div>
+
+            <div>
+              <Label htmlFor="admin_pin" className="text-sm font-semibold">
+                Admin PIN (4 digits)
+              </Label>
+              <Input
+                id="admin_pin"
+                type="text"
+                maxLength={4}
+                value={settings.admin_pin}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, '');
+                  setSettings({ ...settings, admin_pin: value });
+                }}
+                placeholder="1997"
+                className="mt-2"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                4-digit PIN for admin authentication
               </p>
             </div>
           </div>
