@@ -106,35 +106,29 @@ export type Database = {
         Row: {
           admin_phone: string
           auto_messages_enabled: boolean | null
-          auto_wordpress_updates_enabled: boolean | null
           id: string
           server_monthly_cost: number
           sms_source: string | null
           sms_token: string | null
           sms_username: string | null
-          wordpress_update_schedule: string | null
         }
         Insert: {
           admin_phone?: string
           auto_messages_enabled?: boolean | null
-          auto_wordpress_updates_enabled?: boolean | null
           id?: string
           server_monthly_cost?: number
           sms_source?: string | null
           sms_token?: string | null
           sms_username?: string | null
-          wordpress_update_schedule?: string | null
         }
         Update: {
           admin_phone?: string
           auto_messages_enabled?: boolean | null
-          auto_wordpress_updates_enabled?: boolean | null
           id?: string
           server_monthly_cost?: number
           sms_source?: string | null
           sms_token?: string | null
           sms_username?: string | null
-          wordpress_update_schedule?: string | null
         }
         Relationships: []
       }
