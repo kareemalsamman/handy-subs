@@ -18,6 +18,12 @@ const Settings = () => {
     admin_phone: "0525143581",
     auto_messages_enabled: true,
   });
+  const [financialStats, setFinancialStats] = useState({
+    totalRevenue: 0,
+    totalDomainCosts: 0,
+    totalServerCost: 0,
+    totalProfit: 0,
+  });
 
   useEffect(() => {
     const checkAuthAndFetch = async () => {
@@ -64,12 +70,42 @@ const Settings = () => {
           admin_phone: data.admin_phone,
           auto_messages_enabled: data.auto_messages_enabled ?? true,
         });
+        
+        // Calculate financial stats
+        await calculateFinancialStats(data.server_monthly_cost);
       }
     } catch (error: any) {
       console.error("Error fetching settings:", error);
       toast.error("Failed to load settings");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const calculateFinancialStats = async (monthlyServerCost: number) => {
+    try {
+      // Fetch all active subscriptions
+      const { data: subscriptions, error } = await supabase
+        .from("subscriptions")
+        .select("c_cost, domain_cost, buy_domain")
+        .eq("status", "active");
+
+      if (error) throw error;
+
+      const totalRevenue = subscriptions?.reduce((sum, sub) => sum + Number(sub.c_cost), 0) || 0;
+      const totalDomainCosts = subscriptions?.reduce((sum, sub) => 
+        sum + (sub.buy_domain ? Number(sub.domain_cost || 0) : 0), 0) || 0;
+      const totalServerCost = monthlyServerCost * 12;
+      const totalProfit = totalRevenue - totalDomainCosts - totalServerCost;
+
+      setFinancialStats({
+        totalRevenue,
+        totalDomainCosts,
+        totalServerCost,
+        totalProfit,
+      });
+    } catch (error: any) {
+      console.error("Error calculating financial stats:", error);
     }
   };
 
@@ -106,6 +142,9 @@ const Settings = () => {
       }
 
       toast.success("Settings saved successfully!");
+      
+      // Recalculate financial stats after saving
+      await calculateFinancialStats(parseFloat(settings.server_monthly_cost));
     } catch (error: any) {
       console.error("Error saving settings:", error);
       toast.error(error.message || "Failed to save settings");
@@ -190,13 +229,27 @@ const Settings = () => {
 
           <div className="mt-6 pt-4 border-t border-border">
             <div className="glass p-4 rounded-lg">
-              <h3 className="text-sm font-semibold text-foreground mb-2">Profit Calculation</h3>
-              <p className="text-xs text-muted-foreground">
-                Profit = C-COST - Domain Cost - (Server Cost ÷ Total Active Users)
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Current server cost per user: ₪{(parseFloat(settings.server_monthly_cost) / 12).toFixed(2)}/month
-              </p>
+              <h3 className="text-sm font-semibold text-foreground mb-3">Yearly Financial Overview</h3>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-muted-foreground">Total Revenue (Active Subscriptions):</span>
+                  <span className="text-sm font-semibold text-success-text">₪{financialStats.totalRevenue.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-muted-foreground">Total Domain Costs:</span>
+                  <span className="text-sm font-semibold text-destructive">₪{financialStats.totalDomainCosts.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-muted-foreground">Total Server Cost (Monthly × 12):</span>
+                  <span className="text-sm font-semibold text-destructive">₪{financialStats.totalServerCost.toFixed(2)}</span>
+                </div>
+                <div className="mt-3 pt-3 border-t border-border flex justify-between items-center">
+                  <span className="text-sm font-bold text-foreground">Total Yearly Profit:</span>
+                  <span className={`text-lg font-bold ${financialStats.totalProfit >= 0 ? 'text-success-text' : 'text-destructive'}`}>
+                    ₪{financialStats.totalProfit.toFixed(2)}
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
 
