@@ -111,6 +111,7 @@ export type Database = {
           sms_source: string | null
           sms_token: string | null
           sms_username: string | null
+          trigger_api_url: string | null
         }
         Insert: {
           admin_phone?: string
@@ -120,6 +121,7 @@ export type Database = {
           sms_source?: string | null
           sms_token?: string | null
           sms_username?: string | null
+          trigger_api_url?: string | null
         }
         Update: {
           admin_phone?: string
@@ -129,6 +131,7 @@ export type Database = {
           sms_source?: string | null
           sms_token?: string | null
           sms_username?: string | null
+          trigger_api_url?: string | null
         }
         Relationships: []
       }

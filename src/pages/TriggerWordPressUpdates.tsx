@@ -11,31 +11,14 @@ const TriggerWordPressUpdates = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    const checkAuthAndTrigger = async () => {
-      // Check authentication
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        navigate("/auth");
-        return;
-      }
-
-      // Check admin role
-      const { data: roleData } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", session.user.id)
-        .eq("role", "admin")
+    const triggerUpdates = async () => {
+      // Get trigger API URL from settings
+      const { data: settings } = await supabase
+        .from("settings")
+        .select("trigger_api_url")
         .single();
 
-      if (!roleData) {
-        toast({
-          title: "Access Denied",
-          description: "Admin access required",
-          variant: "destructive",
-        });
-        navigate("/");
-        return;
-      }
+      const apiUrl = settings?.trigger_api_url || "https://kareemsamman.com/trigger_updates/";
 
       // Fetch all domains with WordPress configured
       setStatus("Fetching domains...");
@@ -58,7 +41,7 @@ const TriggerWordPressUpdates = () => {
       setStatus(`Sending ${domains.length} domains to trigger API...`);
       
       try {
-        const response = await fetch("https://kareemsamman.com/trigger_updates/", {
+        const response = await fetch(apiUrl, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -88,8 +71,8 @@ const TriggerWordPressUpdates = () => {
       setIsLoading(false);
     };
 
-    checkAuthAndTrigger();
-  }, [navigate, toast]);
+    triggerUpdates();
+  }, [toast]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
