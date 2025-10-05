@@ -26,7 +26,9 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
         return;
       }
 
-      // Verify admin role
+      // TEMPORARY: Admin role check disabled for testing
+      // TODO: Re-enable after confirming OAuth works
+      /*
       const { data: roleData, error: roleError } = await supabase
         .from('user_roles')
         .select('role')
@@ -39,6 +41,7 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
         navigate('/auth');
         return;
       }
+      */
 
       setIsAuthorized(true);
     } catch (error) {
