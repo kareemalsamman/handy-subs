@@ -77,6 +77,7 @@ serve(async (req) => {
       .gte('expire_date', oneMonthFromNow.toISOString().split('T')[0])
       .lte('expire_date', new Date(oneMonthFromNow.getTime() + 86400000).toISOString().split('T')[0]);
 
+    const oneMonthDetails: any[] = [];
     if (oneMonthError) {
       console.error('Error fetching 1-month reminders:', oneMonthError);
     } else if (oneMonthSubs && oneMonthSubs.length > 0) {
@@ -106,13 +107,30 @@ serve(async (req) => {
 الهاتف: ${sub.users.phone_number}`;
 
         // Send SMS to user
-        await supabase.functions.invoke('send-sms', {
-          body: { phone: sub.users.phone_number, message: userMessage }
+        const userSmsResult = await supabase.functions.invoke('send-sms', {
+          body: { phone: sub.users.phone_number, message: userMessage },
+          headers: {
+            Authorization: `Bearer ${supabaseKey}`,
+          }
         });
 
         // Send SMS to admin
-        await supabase.functions.invoke('send-sms', {
-          body: { phone: adminPhone, message: adminMessage }
+        const adminSmsResult = await supabase.functions.invoke('send-sms', {
+          body: { phone: adminPhone, message: adminMessage },
+          headers: {
+            Authorization: `Bearer ${supabaseKey}`,
+          }
+        });
+
+        oneMonthDetails.push({
+          user: sub.users.username,
+          phone: sub.users.phone_number,
+          domain: sub.domains.domain_url,
+          expireDate: sub.expire_date,
+          userSmsSent: userSmsResult.error ? false : true,
+          adminSmsSent: adminSmsResult.error ? false : true,
+          userSmsError: userSmsResult.error?.message,
+          adminSmsError: adminSmsResult.error?.message
         });
 
         // Create notification for admin
@@ -134,6 +152,7 @@ serve(async (req) => {
       }
     }
 
+    const oneWeekDetails: any[] = [];
     // Find subscriptions expiring in 1 week (±1 day window) that haven't been reminded yet
     const { data: oneWeekSubs, error: oneWeekError } = await supabase
       .from('subscriptions')
@@ -182,13 +201,30 @@ serve(async (req) => {
 الهاتف: ${sub.users.phone_number}`;
 
         // Send SMS to user
-        await supabase.functions.invoke('send-sms', {
-          body: { phone: sub.users.phone_number, message: userMessage }
+        const userSmsResult = await supabase.functions.invoke('send-sms', {
+          body: { phone: sub.users.phone_number, message: userMessage },
+          headers: {
+            Authorization: `Bearer ${supabaseKey}`,
+          }
         });
 
         // Send SMS to admin
-        await supabase.functions.invoke('send-sms', {
-          body: { phone: adminPhone, message: adminMessage }
+        const adminSmsResult = await supabase.functions.invoke('send-sms', {
+          body: { phone: adminPhone, message: adminMessage },
+          headers: {
+            Authorization: `Bearer ${supabaseKey}`,
+          }
+        });
+
+        oneWeekDetails.push({
+          user: sub.users.username,
+          phone: sub.users.phone_number,
+          domain: sub.domains.domain_url,
+          expireDate: sub.expire_date,
+          userSmsSent: userSmsResult.error ? false : true,
+          adminSmsSent: adminSmsResult.error ? false : true,
+          userSmsError: userSmsResult.error?.message,
+          adminSmsError: adminSmsResult.error?.message
         });
 
         // Create notification for admin
@@ -214,7 +250,9 @@ serve(async (req) => {
       JSON.stringify({ 
         success: true,
         oneMonthReminders: oneMonthSubs?.length || 0,
-        oneWeekReminders: oneWeekSubs?.length || 0
+        oneWeekReminders: oneWeekSubs?.length || 0,
+        oneMonthDetails,
+        oneWeekDetails
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

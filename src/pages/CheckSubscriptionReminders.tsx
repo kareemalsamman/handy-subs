@@ -21,9 +21,32 @@ const CheckSubscriptionReminders = () => {
         }
 
         setResult(data);
-        setStatus(`✓ Check complete! 
-1-Month Reminders: ${data.oneMonthReminders || 0}
-1-Week Reminders: ${data.oneWeekReminders || 0}`);
+        let statusText = `✓ Check complete!\n\n`;
+        statusText += `1-Month Reminders: ${data.oneMonthReminders || 0}\n`;
+        if (data.oneMonthDetails && data.oneMonthDetails.length > 0) {
+          data.oneMonthDetails.forEach((detail: any) => {
+            statusText += `  • ${detail.user} (${detail.phone})\n`;
+            statusText += `    Domain: ${detail.domain}\n`;
+            statusText += `    Expires: ${detail.expireDate}\n`;
+            statusText += `    User SMS: ${detail.userSmsSent ? '✓ Sent' : '✗ Failed'}\n`;
+            statusText += `    Admin SMS: ${detail.adminSmsSent ? '✓ Sent' : '✗ Failed'}\n`;
+            if (detail.userSmsError) statusText += `    Error: ${detail.userSmsError}\n`;
+          });
+        }
+        
+        statusText += `\n1-Week Reminders: ${data.oneWeekReminders || 0}\n`;
+        if (data.oneWeekDetails && data.oneWeekDetails.length > 0) {
+          data.oneWeekDetails.forEach((detail: any) => {
+            statusText += `  • ${detail.user} (${detail.phone})\n`;
+            statusText += `    Domain: ${detail.domain}\n`;
+            statusText += `    Expires: ${detail.expireDate}\n`;
+            statusText += `    User SMS: ${detail.userSmsSent ? '✓ Sent' : '✗ Failed'}\n`;
+            statusText += `    Admin SMS: ${detail.adminSmsSent ? '✓ Sent' : '✗ Failed'}\n`;
+            if (detail.userSmsError) statusText += `    Error: ${detail.userSmsError}\n`;
+          });
+        }
+        
+        setStatus(statusText);
       } catch (error) {
         console.error("Error checking reminders:", error);
         setStatus(`✗ Error: ${error instanceof Error ? error.message : 'Failed to check reminders'}`);
