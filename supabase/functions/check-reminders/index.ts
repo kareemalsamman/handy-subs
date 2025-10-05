@@ -16,9 +16,17 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Get reset parameter from request
-    const url = new URL(req.url);
-    const shouldReset = url.searchParams.get('reset') === 'true';
+    const { data: settings } = await supabase
+      .from('settings')
+      .select('admin_phone, auto_messages_enabled')
+      .single();
+    
+    const adminPhone = settings?.admin_phone || '0525143581';
+    const autoMessagesEnabled = settings?.auto_messages_enabled ?? true;
+
+    // Get reset parameter from request body
+    const body = await req.json();
+    const shouldReset = body?.reset === true;
 
     // Update expired subscriptions first
     try {
@@ -28,15 +36,6 @@ serve(async (req) => {
       console.error('Failed to update subscription statuses:', e);
     }
     console.log('Checking for subscription reminders...');
-
-    // Get admin phone number and auto messages setting from settings
-    const { data: settings } = await supabase
-      .from('settings')
-      .select('admin_phone, auto_messages_enabled')
-      .single();
-    
-    const adminPhone = settings?.admin_phone || '0525143581';
-    const autoMessagesEnabled = settings?.auto_messages_enabled ?? true;
 
     // If auto messages are disabled, skip sending reminders
     if (!autoMessagesEnabled) {
@@ -62,6 +61,31 @@ serve(async (req) => {
     const oneWeekFromNow = new Date(now);
     oneWeekFromNow.setDate(oneWeekFromNow.getDate() + 7);
 
+    // If reset is true, reset the reminder flags for subscriptions in the date ranges
+    if (shouldReset) {
+      console.log('Reset parameter detected. Resetting reminder flags...');
+      
+      // Reset one month reminder flags
+      await supabase
+        .from('subscriptions')
+        .update({ one_month_reminder_sent: false })
+        .eq('status', 'active')
+        .is('cancelled_at', null)
+        .gte('expire_date', oneMonthFromNow.toISOString().split('T')[0])
+        .lte('expire_date', new Date(oneMonthFromNow.getTime() + 86400000).toISOString().split('T')[0]);
+      
+      // Reset one week reminder flags
+      await supabase
+        .from('subscriptions')
+        .update({ one_week_reminder_sent: false })
+        .eq('status', 'active')
+        .is('cancelled_at', null)
+        .gte('expire_date', oneWeekFromNow.toISOString().split('T')[0])
+        .lte('expire_date', new Date(oneWeekFromNow.getTime() + 86400000).toISOString().split('T')[0]);
+      
+      console.log('Reminder flags reset successfully.');
+    }
+
     // Find subscriptions expiring in 1 month (±1 day window)
     let oneMonthQuery = supabase
       .from('subscriptions')
@@ -80,10 +104,8 @@ serve(async (req) => {
       .gte('expire_date', oneMonthFromNow.toISOString().split('T')[0])
       .lte('expire_date', new Date(oneMonthFromNow.getTime() + 86400000).toISOString().split('T')[0]);
     
-    // Only check unsent reminders if not resetting
-    if (!shouldReset) {
-      oneMonthQuery = oneMonthQuery.eq('one_month_reminder_sent', false);
-    }
+    // Always check only unsent reminders (flags already reset if shouldReset was true)
+    oneMonthQuery = oneMonthQuery.eq('one_month_reminder_sent', false);
     
     const { data: oneMonthSubs, error: oneMonthError } = await oneMonthQuery;
 
@@ -100,19 +122,6 @@ serve(async (req) => {
         const year = expireDate.getFullYear();
         const formattedDate = `${day}/${month}/${year}`;
         
-        // Skip if already sent and not resetting
-        if (sub.one_month_reminder_sent && !shouldReset) {
-          oneMonthDetails.push({
-            user: sub.users.username,
-            phone: sub.users.phone_number,
-            domain: sub.domains.domain_url,
-            expireDate: sub.expire_date,
-            alreadySent: true,
-            userSmsSent: false,
-            adminSmsSent: false
-          });
-          continue;
-        }
         
         // User message
         const userMessage = `تذكير! 🔔
@@ -195,10 +204,8 @@ serve(async (req) => {
       .gte('expire_date', oneWeekFromNow.toISOString().split('T')[0])
       .lte('expire_date', new Date(oneWeekFromNow.getTime() + 86400000).toISOString().split('T')[0]);
     
-    // Only check unsent reminders if not resetting
-    if (!shouldReset) {
-      oneWeekQuery = oneWeekQuery.eq('one_week_reminder_sent', false);
-    }
+    // Always check only unsent reminders (flags already reset if shouldReset was true)
+    oneWeekQuery = oneWeekQuery.eq('one_week_reminder_sent', false);
     
     const { data: oneWeekSubs, error: oneWeekError } = await oneWeekQuery;
 
@@ -213,20 +220,6 @@ serve(async (req) => {
         const month = (expireDate.getMonth() + 1).toString().padStart(2, '0');
         const year = expireDate.getFullYear();
         const formattedDate = `${day}/${month}/${year}`;
-        
-        // Skip if already sent and not resetting
-        if (sub.one_week_reminder_sent && !shouldReset) {
-          oneWeekDetails.push({
-            user: sub.users.username,
-            phone: sub.users.phone_number,
-            domain: sub.domains.domain_url,
-            expireDate: sub.expire_date,
-            alreadySent: true,
-            userSmsSent: false,
-            adminSmsSent: false
-          });
-          continue;
-        }
         
         // User message
         const userMessage = `تنبيه هام! ⚠️

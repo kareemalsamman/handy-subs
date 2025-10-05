@@ -32,13 +32,9 @@ const CheckSubscriptionReminders = () => {
             statusText += `  • ${detail.user} (${detail.phone})\n`;
             statusText += `    Domain: ${detail.domain}\n`;
             statusText += `    Expires: ${detail.expireDate}\n`;
-            if (detail.alreadySent) {
-              statusText += `    ⚠️  Already sent (add ?reset=true to resend)\n`;
-            } else {
-              statusText += `    User SMS: ${detail.userSmsSent ? '✓ Sent' : '✗ Failed'}\n`;
-              statusText += `    Admin SMS: ${detail.adminSmsSent ? '✓ Sent' : '✗ Failed'}\n`;
-              if (detail.userSmsError) statusText += `    Error: ${detail.userSmsError}\n`;
-            }
+            statusText += `    User SMS: ${detail.userSmsSent ? '✓ Sent' : '✗ Failed'}\n`;
+            statusText += `    Admin SMS: ${detail.adminSmsSent ? '✓ Sent' : '✗ Failed'}\n`;
+            if (detail.userSmsError) statusText += `    Error: ${detail.userSmsError}\n`;
           });
         }
         
@@ -48,13 +44,9 @@ const CheckSubscriptionReminders = () => {
             statusText += `  • ${detail.user} (${detail.phone})\n`;
             statusText += `    Domain: ${detail.domain}\n`;
             statusText += `    Expires: ${detail.expireDate}\n`;
-            if (detail.alreadySent) {
-              statusText += `    ⚠️  Already sent (add ?reset=true to resend)\n`;
-            } else {
-              statusText += `    User SMS: ${detail.userSmsSent ? '✓ Sent' : '✗ Failed'}\n`;
-              statusText += `    Admin SMS: ${detail.adminSmsSent ? '✓ Sent' : '✗ Failed'}\n`;
-              if (detail.userSmsError) statusText += `    Error: ${detail.userSmsError}\n`;
-            }
+            statusText += `    User SMS: ${detail.userSmsSent ? '✓ Sent' : '✗ Failed'}\n`;
+            statusText += `    Admin SMS: ${detail.adminSmsSent ? '✓ Sent' : '✗ Failed'}\n`;
+            if (detail.userSmsError) statusText += `    Error: ${detail.userSmsError}\n`;
           });
         }
         
