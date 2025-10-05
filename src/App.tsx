@@ -4,12 +4,10 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
-import Auth from "./pages/Auth";
 import Settings from "./pages/Settings";
 import UserDetail from "./pages/UserDetail";
 import CheckSubscriptionReminders from "./pages/CheckSubscriptionReminders";
 import NotFound from "./pages/NotFound";
-import { ProtectedRoute } from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -20,11 +18,10 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-          <Route path="/user/:userId" element={<ProtectedRoute><UserDetail /></ProtectedRoute>} />
-          <Route path="/check-reminders" element={<ProtectedRoute><CheckSubscriptionReminders /></ProtectedRoute>} />
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/user/:userId" element={<UserDetail />} />
+          <Route path="/check-reminders" element={<CheckSubscriptionReminders />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

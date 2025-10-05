@@ -26,33 +26,8 @@ const Settings = () => {
   });
 
   useEffect(() => {
-    const checkAuthAndFetch = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        navigate("/auth");
-        return;
-      }
-
-      // Check admin role
-      const { data: roleData } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', session.user.id)
-        .eq('role', 'admin')
-        .single();
-
-      if (!roleData) {
-        await supabase.auth.signOut();
-        toast.error('Access denied: Admin privileges required');
-        navigate('/auth');
-        return;
-      }
-
-      fetchSettings();
-    };
-
-    checkAuthAndFetch();
-  }, [navigate]);
+    fetchSettings();
+  }, []);
 
   const fetchSettings = async () => {
     try {
