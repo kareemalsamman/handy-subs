@@ -127,7 +127,7 @@ serve(async (req) => {
       .insert({
         phone_number: phone,
         message: message,
-        status: response.ok ? 'sent' : 'failed',
+        status: response.ok ? 'success' : 'failed',
         response: responseText
       });
 
