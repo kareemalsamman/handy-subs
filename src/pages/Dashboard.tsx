@@ -145,7 +145,8 @@ const Dashboard = () => {
       
       const totalRevenue = revenueSubscriptions.reduce((sum, sub) => sum + (sub.c_cost || 0), 0);
       const totalDomainCosts = revenueSubscriptions.reduce((sum, sub) => sum + (sub.domain_cost || 0), 0);
-      const totalCosts = totalDomainCosts; // Only domain costs
+      const yearlyServerCost = serverCost * 12;
+      const totalCosts = totalDomainCosts + yearlyServerCost; // Domain costs + yearly server cost
       const totalProfit = totalRevenue - totalCosts;
       
       const activeUsers = formattedUsers.filter(user => 
