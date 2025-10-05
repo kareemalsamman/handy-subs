@@ -12,7 +12,7 @@ const Auth = () => {
 
   useEffect(() => {
     // Check if already authenticated
-    const isAuthenticated = sessionStorage.getItem("isAuthenticated");
+    const isAuthenticated = localStorage.getItem("isAuthenticated");
     if (isAuthenticated === "true") {
       navigate("/");
     }
@@ -21,7 +21,7 @@ const Auth = () => {
   useEffect(() => {
     if (pin.length === 4) {
       if (pin === CORRECT_PIN) {
-        sessionStorage.setItem("isAuthenticated", "true");
+        localStorage.setItem("isAuthenticated", "true");
         toast({
           title: "Access Granted",
           description: "Welcome back!",
@@ -136,15 +136,6 @@ const Auth = () => {
           </div>
         </div>
 
-        {/* Bottom Text */}
-        <div className="flex justify-between text-lg font-light text-foreground/70 px-2">
-          <button className="hover:text-foreground/90 transition-colors">
-            Emergency
-          </button>
-          <button className="hover:text-foreground/90 transition-colors">
-            Cancel
-          </button>
-        </div>
       </div>
     </div>
   );

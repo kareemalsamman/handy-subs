@@ -166,8 +166,8 @@ const Dashboard = () => {
     setFilteredUsers(filtered);
   }, [users, selectedCompany, selectedStatus, searchQuery]);
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
+  const handleLogout = () => {
+    localStorage.removeItem("isAuthenticated");
     navigate("/auth");
   };
 
