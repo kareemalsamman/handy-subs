@@ -17,6 +17,7 @@ const Settings = () => {
     server_monthly_cost: "504",
     admin_phone: "0525143581",
     auto_wordpress_updates_enabled: false,
+    auto_messages_enabled: true,
   });
 
   useEffect(() => {
@@ -63,6 +64,7 @@ const Settings = () => {
           server_monthly_cost: data.server_monthly_cost.toString(),
           admin_phone: data.admin_phone,
           auto_wordpress_updates_enabled: data.auto_wordpress_updates_enabled || false,
+          auto_messages_enabled: data.auto_messages_enabled ?? true,
         });
       }
     } catch (error: any) {
@@ -89,6 +91,7 @@ const Settings = () => {
             server_monthly_cost: parseFloat(settings.server_monthly_cost),
             admin_phone: settings.admin_phone,
             auto_wordpress_updates_enabled: settings.auto_wordpress_updates_enabled,
+            auto_messages_enabled: settings.auto_messages_enabled,
           })
           .eq("id", existingSettings.id);
 
@@ -100,6 +103,7 @@ const Settings = () => {
             server_monthly_cost: parseFloat(settings.server_monthly_cost),
             admin_phone: settings.admin_phone,
             auto_wordpress_updates_enabled: settings.auto_wordpress_updates_enabled,
+            auto_messages_enabled: settings.auto_messages_enabled,
           });
 
         if (error) throw error;
@@ -252,6 +256,51 @@ const Settings = () => {
               </p>
               <p className="text-xs text-muted-foreground mt-1">
                 • You can manually check and update sites anytime from user detail pages
+              </p>
+            </div>
+          </div>
+        </Card>
+
+        {/* Auto Messages Settings */}
+        <Card className="glass-strong p-6">
+          <h2 className="text-lg font-semibold text-foreground mb-4">Auto SMS Notifications</h2>
+          
+          <div className="space-y-4">
+            <div className="flex items-center justify-between p-4 glass rounded-lg">
+              <div className="space-y-1">
+                <Label htmlFor="auto-messages" className="text-sm font-semibold">
+                  Enable Auto Messages
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  Send automatic SMS reminders for subscription expiration
+                </p>
+              </div>
+              <Switch
+                id="auto-messages"
+                checked={settings.auto_messages_enabled}
+                onCheckedChange={(checked) =>
+                  setSettings({ ...settings, auto_messages_enabled: checked })
+                }
+              />
+            </div>
+
+            <div className="glass p-4 rounded-lg">
+              <h3 className="text-sm font-semibold text-foreground mb-2">Reminder Schedule</h3>
+              <p className="text-xs text-muted-foreground">
+                • 1 month before subscription expires
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                • 1 week before subscription expires
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                • Reminders are sent to both users and admin
+              </p>
+            </div>
+
+            <div className="glass p-4 rounded-lg bg-amber-500/10 border-amber-500/20">
+              <h3 className="text-sm font-semibold text-foreground mb-2">⚠️ Important</h3>
+              <p className="text-xs text-muted-foreground">
+                When disabled, no automatic SMS reminders will be sent for subscription expiration. You will need to track and contact users manually.
               </p>
             </div>
           </div>

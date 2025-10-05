@@ -25,13 +25,31 @@ serve(async (req) => {
     }
     console.log('Checking for subscription reminders...');
 
-    // Get admin phone number from settings
+    // Get admin phone number and auto messages setting from settings
     const { data: settings } = await supabase
       .from('settings')
-      .select('admin_phone')
+      .select('admin_phone, auto_messages_enabled')
       .single();
     
     const adminPhone = settings?.admin_phone || '0525143581';
+    const autoMessagesEnabled = settings?.auto_messages_enabled ?? true;
+
+    // If auto messages are disabled, skip sending reminders
+    if (!autoMessagesEnabled) {
+      console.log('Auto messages are disabled. Skipping reminder checks.');
+      return new Response(
+        JSON.stringify({ 
+          success: true,
+          message: 'Auto messages disabled',
+          oneMonthReminders: 0,
+          oneWeekReminders: 0
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200 
+        }
+      );
+    }
 
     // Get current date
     const now = new Date();

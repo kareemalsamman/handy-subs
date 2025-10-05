@@ -105,6 +105,7 @@ export type Database = {
       settings: {
         Row: {
           admin_phone: string
+          auto_messages_enabled: boolean | null
           auto_wordpress_updates_enabled: boolean | null
           id: string
           server_monthly_cost: number
@@ -115,6 +116,7 @@ export type Database = {
         }
         Insert: {
           admin_phone?: string
+          auto_messages_enabled?: boolean | null
           auto_wordpress_updates_enabled?: boolean | null
           id?: string
           server_monthly_cost?: number
@@ -125,6 +127,7 @@ export type Database = {
         }
         Update: {
           admin_phone?: string
+          auto_messages_enabled?: boolean | null
           auto_wordpress_updates_enabled?: boolean | null
           id?: string
           server_monthly_cost?: number
