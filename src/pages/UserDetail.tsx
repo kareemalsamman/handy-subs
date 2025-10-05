@@ -9,8 +9,6 @@ import { Card } from "@/components/ui/card";
 import { AddSubscriptionDialog } from "@/components/user-detail/AddSubscriptionDialog";
 import { EditSubscriptionDialog } from "@/components/user-detail/EditSubscriptionDialog";
 import { TestSMSDialog } from "@/components/user-detail/TestSMSDialog";
-import { WordPressSiteCard } from "@/components/user-detail/WordPressSiteCard";
-import { AddWordPressSiteDialog } from "@/components/user-detail/AddWordPressSiteDialog";
 import { cn } from "@/lib/utils";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
@@ -23,12 +21,6 @@ interface User {
   domains: { 
     id: string; 
     domain_url: string;
-    wordpress_admin_url?: string;
-    wordpress_secret_key?: string;
-    last_checked?: string;
-    wordpress_update_available: boolean;
-    plugins_updates_count: number;
-    themes_updates_count: number;
   }[];
   subscriptions: {
     id: string;
@@ -337,77 +329,6 @@ const UserDetail = () => {
             <p className="text-muted-foreground text-sm">No subscriptions yet</p>
           </Card>
         )}
-
-        {/* WordPress Sites Management */}
-        <div className="mt-6">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-lg font-semibold text-foreground">WordPress Sites</h2>
-            <AddWordPressSiteDialog 
-              userId={user.id}
-              domains={user.domains}
-              onSuccess={fetchUser}
-            />
-          </div>
-
-          {user.domains && user.domains.some(d => d.wordpress_secret_key) ? (
-            <>
-              {/* Bulk Update Summary */}
-              {(() => {
-                const wpSites = user.domains.filter(d => d.wordpress_secret_key);
-                const sitesWithUpdates = wpSites.filter(d => 
-                  d.wordpress_update_available || d.plugins_updates_count > 0 || d.themes_updates_count > 0
-                );
-
-                if (wpSites.length > 0) {
-                  return (
-                    <Card className="glass-strong p-4 mb-4">
-                      <h3 className="font-semibold text-foreground mb-3">Bulk Actions</h3>
-                      <div className="space-y-2 text-sm mb-3">
-                        <p className="text-muted-foreground">Total Sites: <span className="font-semibold text-foreground">{wpSites.length}</span></p>
-                        <p className="text-muted-foreground">Sites with updates: <span className="font-semibold text-destructive">{sitesWithUpdates.length}</span></p>
-                      </div>
-                      {sitesWithUpdates.length > 0 && (
-                        <Button
-                          className="w-full"
-                          onClick={() => {
-                            sitesWithUpdates.forEach(site => {
-                              const url = `https://${site.domain_url}?fullupdate=true&key=${site.wordpress_secret_key}`;
-                              window.open(url, '_blank');
-                            });
-                            toast.success(`Opening ${sitesWithUpdates.length} sites for updates`);
-                          }}
-                        >
-                          Update All Sites Now
-                        </Button>
-                      )}
-                    </Card>
-                  );
-                }
-                return null;
-              })()}
-
-              {/* WordPress Sites Grid */}
-              <div className="grid gap-4 md:grid-cols-2">
-                {user.domains
-                  .filter(d => d.wordpress_secret_key)
-                  .map((site) => (
-                    <WordPressSiteCard 
-                      key={site.id}
-                      site={site}
-                      onUpdate={fetchUser}
-                    />
-                  ))}
-              </div>
-            </>
-          ) : (
-            <Card className="glass-strong p-8 text-center">
-              <p className="text-muted-foreground text-sm">No WordPress sites configured</p>
-              <p className="text-xs text-muted-foreground mt-2">
-                Add your first WordPress site to start managing updates
-              </p>
-            </Card>
-          )}
-        </div>
 
         {/* SMS Testing */}
         <Button

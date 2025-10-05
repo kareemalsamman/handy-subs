@@ -17,7 +17,6 @@ const Settings = () => {
     server_monthly_cost: "504",
     admin_phone: "0525143581",
     auto_messages_enabled: true,
-    trigger_api_url: "https://kareemsamman.com/trigger_updates/",
   });
 
   useEffect(() => {
@@ -64,7 +63,6 @@ const Settings = () => {
           server_monthly_cost: data.server_monthly_cost.toString(),
           admin_phone: data.admin_phone,
           auto_messages_enabled: data.auto_messages_enabled ?? true,
-          trigger_api_url: data.trigger_api_url || "https://kareemsamman.com/trigger_updates/",
         });
       }
     } catch (error: any) {
@@ -91,7 +89,6 @@ const Settings = () => {
             server_monthly_cost: parseFloat(settings.server_monthly_cost),
             admin_phone: settings.admin_phone,
             auto_messages_enabled: settings.auto_messages_enabled,
-            trigger_api_url: settings.trigger_api_url,
           })
           .eq("id", existingSettings.id);
 
@@ -103,7 +100,6 @@ const Settings = () => {
             server_monthly_cost: parseFloat(settings.server_monthly_cost),
             admin_phone: settings.admin_phone,
             auto_messages_enabled: settings.auto_messages_enabled,
-            trigger_api_url: settings.trigger_api_url,
           });
 
         if (error) throw error;
@@ -188,25 +184,6 @@ const Settings = () => {
               />
               <p className="text-xs text-muted-foreground mt-1">
                 Phone number for admin notifications
-              </p>
-            </div>
-
-            <div>
-              <Label htmlFor="trigger_api_url" className="text-sm font-semibold">
-                WordPress Trigger API URL
-              </Label>
-              <Input
-                id="trigger_api_url"
-                type="url"
-                value={settings.trigger_api_url}
-                onChange={(e) =>
-                  setSettings({ ...settings, trigger_api_url: e.target.value })
-                }
-                placeholder="https://kareemsamman.com/trigger_updates/"
-                className="mt-2"
-              />
-              <p className="text-xs text-muted-foreground mt-1">
-                API endpoint for triggering WordPress updates
               </p>
             </div>
           </div>
