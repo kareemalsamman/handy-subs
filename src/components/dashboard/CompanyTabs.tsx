@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 
-const companies = ["All Companies", "Ajad", "Soft", "Spex", "Almas", "Others"];
+const companies = ["All Companies", "Ajad", "soft", "spex", "almas", "others"];
 
 interface CompanyTabsProps {
   selectedCompany: string;

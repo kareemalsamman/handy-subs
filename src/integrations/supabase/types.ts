@@ -334,7 +334,16 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user"
-      company_type: "Ajad" | "Soft" | "Spex" | "Almas" | "Others"
+      company_type:
+        | "Ajad"
+        | "Soft"
+        | "Spex"
+        | "Almas"
+        | "Others"
+        | "soft"
+        | "spex"
+        | "almas"
+        | "others"
       notification_type:
         | "sms_reminder"
         | "payment_received"
@@ -471,7 +480,17 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
-      company_type: ["Ajad", "Soft", "Spex", "Almas", "Others"],
+      company_type: [
+        "Ajad",
+        "Soft",
+        "Spex",
+        "Almas",
+        "Others",
+        "soft",
+        "spex",
+        "almas",
+        "others",
+      ],
       notification_type: [
         "sms_reminder",
         "payment_received",

@@ -9,7 +9,7 @@ export const addUserSchema = z.object({
   phone_number: z.string()
     .regex(/^0[0-9]{9}$/, 'Invalid Israeli phone number (must be 10 digits starting with 0)')
     .length(10, 'Phone number must be exactly 10 digits'),
-  company: z.enum(['Others', 'R-Server', 'Server'], {
+  company: z.enum(['Ajad', 'soft', 'spex', 'almas', 'others'], {
     errorMap: () => ({ message: 'Invalid company selection' })
   }),
   domains: z.array(

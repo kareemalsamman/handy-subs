@@ -27,39 +27,12 @@ serve(async (req) => {
   }
 
   try {
-    // Verify authentication (accept either a user JWT or the service role key)
-    const authHeader = req.headers.get('authorization');
-    if (!authHeader) {
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
-    const anonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 
-    const isServiceRole = authHeader === `Bearer ${serviceRoleKey}`;
-    console.log('send-sms authorization mode:', isServiceRole ? 'service_role' : 'user');
-
-    // Use service role key for internal backend calls, anon key for user-authenticated calls
-    const supabaseClient = createClient(
-      supabaseUrl,
-      isServiceRole ? serviceRoleKey : anonKey,
-      { global: { headers: { Authorization: authHeader } } }
-    );
-
-    // Only verify user session when not using the service role
-    if (!isServiceRole) {
-      const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
-      if (authError || !user) {
-        return new Response(
-          JSON.stringify({ error: 'Invalid authentication token' }),
-          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-    }
+    // Public endpoint: no user auth required; using service role for DB operations
+    const supabaseClient = createClient(supabaseUrl, serviceRoleKey);
+    console.log('send-sms authorization mode:', 'public');
 
     const { phone, message }: SMSRequest = await req.json();
 
