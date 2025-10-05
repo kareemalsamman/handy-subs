@@ -11,9 +11,13 @@ const CheckSubscriptionReminders = () => {
     const checkReminders = async () => {
       setStatus("Checking subscription reminders...");
       
+      // Check if reset parameter is in URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const shouldReset = urlParams.get('reset') === 'true';
+      
       try {
         const { data, error } = await supabase.functions.invoke('check-reminders', {
-          body: {}
+          body: { reset: shouldReset }
         });
 
         if (error) {
@@ -28,9 +32,13 @@ const CheckSubscriptionReminders = () => {
             statusText += `  • ${detail.user} (${detail.phone})\n`;
             statusText += `    Domain: ${detail.domain}\n`;
             statusText += `    Expires: ${detail.expireDate}\n`;
-            statusText += `    User SMS: ${detail.userSmsSent ? '✓ Sent' : '✗ Failed'}\n`;
-            statusText += `    Admin SMS: ${detail.adminSmsSent ? '✓ Sent' : '✗ Failed'}\n`;
-            if (detail.userSmsError) statusText += `    Error: ${detail.userSmsError}\n`;
+            if (detail.alreadySent) {
+              statusText += `    ⚠️  Already sent (add ?reset=true to resend)\n`;
+            } else {
+              statusText += `    User SMS: ${detail.userSmsSent ? '✓ Sent' : '✗ Failed'}\n`;
+              statusText += `    Admin SMS: ${detail.adminSmsSent ? '✓ Sent' : '✗ Failed'}\n`;
+              if (detail.userSmsError) statusText += `    Error: ${detail.userSmsError}\n`;
+            }
           });
         }
         
@@ -40,9 +48,13 @@ const CheckSubscriptionReminders = () => {
             statusText += `  • ${detail.user} (${detail.phone})\n`;
             statusText += `    Domain: ${detail.domain}\n`;
             statusText += `    Expires: ${detail.expireDate}\n`;
-            statusText += `    User SMS: ${detail.userSmsSent ? '✓ Sent' : '✗ Failed'}\n`;
-            statusText += `    Admin SMS: ${detail.adminSmsSent ? '✓ Sent' : '✗ Failed'}\n`;
-            if (detail.userSmsError) statusText += `    Error: ${detail.userSmsError}\n`;
+            if (detail.alreadySent) {
+              statusText += `    ⚠️  Already sent (add ?reset=true to resend)\n`;
+            } else {
+              statusText += `    User SMS: ${detail.userSmsSent ? '✓ Sent' : '✗ Failed'}\n`;
+              statusText += `    Admin SMS: ${detail.adminSmsSent ? '✓ Sent' : '✗ Failed'}\n`;
+              if (detail.userSmsError) statusText += `    Error: ${detail.userSmsError}\n`;
+            }
           });
         }
         

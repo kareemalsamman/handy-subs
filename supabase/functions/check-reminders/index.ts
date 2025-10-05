@@ -16,6 +16,10 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
+    // Get reset parameter from request
+    const url = new URL(req.url);
+    const shouldReset = url.searchParams.get('reset') === 'true';
+
     // Update expired subscriptions first
     try {
       await supabase.rpc('update_subscription_status');
@@ -58,8 +62,8 @@ serve(async (req) => {
     const oneWeekFromNow = new Date(now);
     oneWeekFromNow.setDate(oneWeekFromNow.getDate() + 7);
 
-    // Find subscriptions expiring in 1 month (±1 day window) that haven't been reminded yet
-    const { data: oneMonthSubs, error: oneMonthError } = await supabase
+    // Find subscriptions expiring in 1 month (±1 day window)
+    let oneMonthQuery = supabase
       .from('subscriptions')
       .select(`
         id,
@@ -73,9 +77,15 @@ serve(async (req) => {
       `)
       .eq('status', 'active')
       .is('cancelled_at', null)
-      .eq('one_month_reminder_sent', false)
       .gte('expire_date', oneMonthFromNow.toISOString().split('T')[0])
       .lte('expire_date', new Date(oneMonthFromNow.getTime() + 86400000).toISOString().split('T')[0]);
+    
+    // Only check unsent reminders if not resetting
+    if (!shouldReset) {
+      oneMonthQuery = oneMonthQuery.eq('one_month_reminder_sent', false);
+    }
+    
+    const { data: oneMonthSubs, error: oneMonthError } = await oneMonthQuery;
 
     const oneMonthDetails: any[] = [];
     if (oneMonthError) {
@@ -89,6 +99,20 @@ serve(async (req) => {
         const month = (expireDate.getMonth() + 1).toString().padStart(2, '0');
         const year = expireDate.getFullYear();
         const formattedDate = `${day}/${month}/${year}`;
+        
+        // Skip if already sent and not resetting
+        if (sub.one_month_reminder_sent && !shouldReset) {
+          oneMonthDetails.push({
+            user: sub.users.username,
+            phone: sub.users.phone_number,
+            domain: sub.domains.domain_url,
+            expireDate: sub.expire_date,
+            alreadySent: true,
+            userSmsSent: false,
+            adminSmsSent: false
+          });
+          continue;
+        }
         
         // User message
         const userMessage = `تذكير! 🔔
@@ -153,8 +177,8 @@ serve(async (req) => {
     }
 
     const oneWeekDetails: any[] = [];
-    // Find subscriptions expiring in 1 week (±1 day window) that haven't been reminded yet
-    const { data: oneWeekSubs, error: oneWeekError } = await supabase
+    // Find subscriptions expiring in 1 week (±1 day window)
+    let oneWeekQuery = supabase
       .from('subscriptions')
       .select(`
         id,
@@ -168,9 +192,15 @@ serve(async (req) => {
       `)
       .eq('status', 'active')
       .is('cancelled_at', null)
-      .eq('one_week_reminder_sent', false)
       .gte('expire_date', oneWeekFromNow.toISOString().split('T')[0])
       .lte('expire_date', new Date(oneWeekFromNow.getTime() + 86400000).toISOString().split('T')[0]);
+    
+    // Only check unsent reminders if not resetting
+    if (!shouldReset) {
+      oneWeekQuery = oneWeekQuery.eq('one_week_reminder_sent', false);
+    }
+    
+    const { data: oneWeekSubs, error: oneWeekError } = await oneWeekQuery;
 
     if (oneWeekError) {
       console.error('Error fetching 1-week reminders:', oneWeekError);
@@ -183,6 +213,20 @@ serve(async (req) => {
         const month = (expireDate.getMonth() + 1).toString().padStart(2, '0');
         const year = expireDate.getFullYear();
         const formattedDate = `${day}/${month}/${year}`;
+        
+        // Skip if already sent and not resetting
+        if (sub.one_week_reminder_sent && !shouldReset) {
+          oneWeekDetails.push({
+            user: sub.users.username,
+            phone: sub.users.phone_number,
+            domain: sub.domains.domain_url,
+            expireDate: sub.expire_date,
+            alreadySent: true,
+            userSmsSent: false,
+            adminSmsSent: false
+          });
+          continue;
+        }
         
         // User message
         const userMessage = `تنبيه هام! ⚠️
