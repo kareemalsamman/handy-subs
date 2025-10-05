@@ -8,6 +8,7 @@ import Auth from "./pages/Auth";
 import Settings from "./pages/Settings";
 import UserDetail from "./pages/UserDetail";
 import TriggerWordPressUpdates from "./pages/TriggerWordPressUpdates";
+import CheckSubscriptionReminders from "./pages/CheckSubscriptionReminders";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +25,7 @@ const App = () => (
           <Route path="/settings" element={<Settings />} />
           <Route path="/user/:userId" element={<UserDetail />} />
           <Route path="/trigger-wordpress-updates" element={<TriggerWordPressUpdates />} />
+          <Route path="/check-reminders" element={<CheckSubscriptionReminders />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
