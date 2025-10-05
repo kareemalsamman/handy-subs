@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { testSmsSchema } from "@/lib/validation";
 
 interface TestSMSDialogProps {
   open: boolean;
@@ -78,8 +79,16 @@ export const TestSMSDialog = ({ open, onOpenChange, user }: TestSMSDialogProps) 
 
       const message = messageType === "custom" ? customMessage : getMessageTemplate(messageType);
 
-      if (!message.trim()) {
-        toast.error("Please enter a message");
+      // Validate with zod schema
+      const result = testSmsSchema.safeParse({
+        phone: user.phone_number,
+        message: message,
+      });
+
+      if (!result.success) {
+        const firstError = result.error.errors[0];
+        toast.error(firstError.message);
+        setIsLoading(false);
         return;
       }
 

@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2, Plus, Trash2 } from "lucide-react";
+import { addUserSchema } from "@/lib/validation";
 
 interface AddUserDialogProps {
   open: boolean;
@@ -55,14 +56,16 @@ export const AddUserDialog = ({ open, onOpenChange, onSuccess }: AddUserDialogPr
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.username || !formData.phone_number) {
-      toast.error("Please fill in all required fields");
-      return;
-    }
-
+    // Validate with zod schema
     const validDomains = formData.domains.filter(d => d.trim());
-    if (validDomains.length === 0) {
-      toast.error("Please add at least one domain");
+    const result = addUserSchema.safeParse({
+      ...formData,
+      domains: validDomains,
+    });
+
+    if (!result.success) {
+      const firstError = result.error.errors[0];
+      toast.error(firstError.message);
       return;
     }
 

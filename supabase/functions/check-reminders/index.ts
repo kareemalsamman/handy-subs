@@ -12,9 +12,57 @@ serve(async (req) => {
   }
 
   try {
+    // Verify authentication
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized - Missing auth header' }), 
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 401 
+        }
+      );
+    }
+
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    
+    // Create client with user's auth token for verification
+    const supabaseAuth = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } }
+    });
+
+    // Verify user authentication
+    const { data: { user }, error: authError } = await supabaseAuth.auth.getUser();
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized - Invalid token' }), 
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 401 
+        }
+      );
+    }
+
+    // Verify admin role
+    const { data: isAdmin, error: roleError } = await supabaseAuth.rpc('has_role', { 
+      _user_id: user.id, 
+      _role: 'admin' 
+    });
+
+    if (roleError || !isAdmin) {
+      return new Response(
+        JSON.stringify({ error: 'Forbidden - Admin role required' }), 
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 403 
+        }
+      );
+    }
+
+    // Create admin client for operations
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const { data: settings } = await supabase
       .from('settings')
@@ -143,7 +191,7 @@ serve(async (req) => {
         const userSmsResult = await supabase.functions.invoke('send-sms', {
           body: { phone: sub.users.phone_number, message: userMessage },
           headers: {
-            Authorization: `Bearer ${supabaseKey}`,
+            Authorization: `Bearer ${supabaseServiceKey}`,
           }
         });
 
@@ -151,7 +199,7 @@ serve(async (req) => {
         const adminSmsResult = await supabase.functions.invoke('send-sms', {
           body: { phone: adminPhone, message: adminMessage },
           headers: {
-            Authorization: `Bearer ${supabaseKey}`,
+            Authorization: `Bearer ${supabaseServiceKey}`,
           }
         });
 
@@ -241,7 +289,7 @@ serve(async (req) => {
         const userSmsResult = await supabase.functions.invoke('send-sms', {
           body: { phone: sub.users.phone_number, message: userMessage },
           headers: {
-            Authorization: `Bearer ${supabaseKey}`,
+            Authorization: `Bearer ${supabaseServiceKey}`,
           }
         });
 
@@ -249,7 +297,7 @@ serve(async (req) => {
         const adminSmsResult = await supabase.functions.invoke('send-sms', {
           body: { phone: adminPhone, message: adminMessage },
           headers: {
-            Authorization: `Bearer ${supabaseKey}`,
+            Authorization: `Bearer ${supabaseServiceKey}`,
           }
         });
 
