@@ -20,7 +20,7 @@ export const EditUserDialog = ({ open, onOpenChange, onSuccess, user }: EditUser
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     username: "",
-    company: "Others",
+    company: "others", // Changed from "Others" to match the constant
     phone_number: "",
     domains: [""],
   });
@@ -31,7 +31,7 @@ export const EditUserDialog = ({ open, onOpenChange, onSuccess, user }: EditUser
         username: user.username,
         company: user.company,
         phone_number: user.phone_number,
-        domains: user.domains?.map(d => d.domain_url.replace(/^https?:\/\//, '')) || [""],
+        domains: user.domains?.map((d) => d.domain_url.replace(/^https?:\/\//, "")) || [""],
       });
     }
   }, [user, open]);
@@ -67,13 +67,13 @@ export const EditUserDialog = ({ open, onOpenChange, onSuccess, user }: EditUser
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.username || !formData.phone_number) {
       toast.error("Please fill in all required fields");
       return;
     }
 
-    const validDomains = formData.domains.filter(d => d.trim());
+    const validDomains = formData.domains.filter((d) => d.trim());
     if (validDomains.length === 0) {
       toast.error("Please add at least one domain");
       return;
@@ -95,22 +95,17 @@ export const EditUserDialog = ({ open, onOpenChange, onSuccess, user }: EditUser
       if (userError) throw userError;
 
       // Delete old domains
-      const { error: deleteDomainsError } = await supabase
-        .from("domains")
-        .delete()
-        .eq("user_id", user!.id);
+      const { error: deleteDomainsError } = await supabase.from("domains").delete().eq("user_id", user!.id);
 
       if (deleteDomainsError) throw deleteDomainsError;
 
       // Insert new domains
-      const domainsToInsert = validDomains.map(d => ({
+      const domainsToInsert = validDomains.map((d) => ({
         user_id: user!.id,
         domain_url: formatDomain(d),
       }));
 
-      const { error: domainsError } = await supabase
-        .from("domains")
-        .insert(domainsToInsert);
+      const { error: domainsError } = await supabase.from("domains").insert(domainsToInsert);
 
       if (domainsError) throw domainsError;
 
@@ -129,14 +124,14 @@ export const EditUserDialog = ({ open, onOpenChange, onSuccess, user }: EditUser
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto glass-strong">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-foreground">
-            Edit User
-          </DialogTitle>
+          <DialogTitle className="text-2xl font-bold text-foreground">Edit User</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label htmlFor="username" className="text-sm font-semibold">Username *</Label>
+            <Label htmlFor="username" className="text-sm font-semibold">
+              Username *
+            </Label>
             <Input
               id="username"
               value={formData.username}
@@ -148,21 +143,27 @@ export const EditUserDialog = ({ open, onOpenChange, onSuccess, user }: EditUser
           </div>
 
           <div>
-            <Label htmlFor="company" className="text-sm font-semibold">Company *</Label>
+            <Label htmlFor="company" className="text-sm font-semibold">
+              Company *
+            </Label>
             <Select value={formData.company} onValueChange={(value) => setFormData({ ...formData, company: value })}>
               <SelectTrigger className="mt-1">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="bg-popover z-50">
-                <SelectItem value="Others">Others</SelectItem>
-                <SelectItem value="R-Server">R-Server</SelectItem>
-                <SelectItem value="Server">Server</SelectItem>
+                {COMPANIES.map((company) => (
+                  <SelectItem key={company} value={company}>
+                    {company}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
 
           <div>
-            <Label htmlFor="phone" className="text-sm font-semibold">Phone Number *</Label>
+            <Label htmlFor="phone" className="text-sm font-semibold">
+              Phone Number *
+            </Label>
             <Input
               id="phone"
               type="tel"
@@ -200,13 +201,7 @@ export const EditUserDialog = ({ open, onOpenChange, onSuccess, user }: EditUser
                 )}
               </div>
             ))}
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={addDomain}
-              className="mt-2 w-full"
-            >
+            <Button type="button" variant="outline" size="sm" onClick={addDomain} className="mt-2 w-full">
               <Plus className="h-4 w-4 mr-1" />
               Add Domain
             </Button>
