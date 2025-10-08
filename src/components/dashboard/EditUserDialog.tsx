@@ -8,7 +8,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2, Plus, Trash2 } from "lucide-react";
 import { User } from "@/pages/Dashboard";
-import { COMPANIES } from "@/components/CompanyTabs";
 
 interface EditUserDialogProps {
   open: boolean;
@@ -21,7 +20,7 @@ export const EditUserDialog = ({ open, onOpenChange, onSuccess, user }: EditUser
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     username: "",
-    company: "others",
+    company: "Others",
     phone_number: "",
     domains: [""],
   });
@@ -121,11 +120,6 @@ export const EditUserDialog = ({ open, onOpenChange, onSuccess, user }: EditUser
     }
   };
 
-  // Capitalize first letter for display
-  const capitalizeFirstLetter = (str: string) => {
-    return str.charAt(0).toUpperCase() + str.slice(1);
-  };
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto glass-strong">
@@ -157,11 +151,9 @@ export const EditUserDialog = ({ open, onOpenChange, onSuccess, user }: EditUser
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="bg-popover z-50">
-                {COMPANIES.map((company) => (
-                  <SelectItem key={company} value={company}>
-                    {capitalizeFirstLetter(company)}
-                  </SelectItem>
-                ))}
+                <SelectItem value="Others">Others</SelectItem>
+                <SelectItem value="R-Server">R-Server</SelectItem>
+                <SelectItem value="Server">Server</SelectItem>
               </SelectContent>
             </Select>
           </div>
