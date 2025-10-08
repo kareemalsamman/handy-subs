@@ -174,10 +174,10 @@ export const UsersTable = ({ users, onRefresh, onEdit }: UsersTableProps) => {
                       <span className="font-medium">{user.phone_number}</span>
                     </a>
                     <a
-                  href={(function(){
+                      href={(() => {
                         const digits = user.phone_number.replace(/\D/g, '');
-                        const phoneNumber = digits.startsWith('0') ? 972${digits.slice(1)} : digits;
-                        return https://wa.me/${phoneNumber};
+                        const phoneNumber = digits.startsWith('0') ? `972${digits.slice(1)}` : digits;
+                        return `https://wa.me/${phoneNumber}`;
                       })()}
                       target="_blank"
                       rel="noopener noreferrer"

@@ -94,31 +94,38 @@ export const EditUserDialog = ({ open, onOpenChange, onSuccess, user }: EditUser
 
       if (userError) throw userError;
 
-      // Update or insert domains without deleting to preserve subscriptions
+      // Only update domains if they have actually changed
       const existingDomains = user?.domains || [];
       const formattedDomains = validDomains.map((d) => formatDomain(d));
+      
+      // Check if domains list has changed
+      const domainsChanged = 
+        existingDomains.length !== formattedDomains.length ||
+        existingDomains.some((d, i) => d.domain_url !== formattedDomains[i]);
 
-      // Update existing domains (by index)
-      for (let i = 0; i < Math.min(existingDomains.length, formattedDomains.length); i++) {
-        const current = existingDomains[i];
-        const newUrl = formattedDomains[i];
-        if (current.domain_url !== newUrl) {
-          const { error: updateDomainError } = await supabase
-            .from("domains")
-            .update({ domain_url: newUrl })
-            .eq("id", current.id);
-          if (updateDomainError) throw updateDomainError;
+      if (domainsChanged) {
+        // Update existing domains (by index)
+        for (let i = 0; i < Math.min(existingDomains.length, formattedDomains.length); i++) {
+          const current = existingDomains[i];
+          const newUrl = formattedDomains[i];
+          if (current.domain_url !== newUrl) {
+            const { error: updateDomainError } = await supabase
+              .from("domains")
+              .update({ domain_url: newUrl })
+              .eq("id", current.id);
+            if (updateDomainError) throw updateDomainError;
+          }
         }
-      }
 
-      // Insert any extra domains provided
-      if (formattedDomains.length > existingDomains.length) {
-        const toInsert = formattedDomains.slice(existingDomains.length).map((d) => ({
-          user_id: user!.id,
-          domain_url: d,
-        }));
-        const { error: insertError } = await supabase.from("domains").insert(toInsert);
-        if (insertError) throw insertError;
+        // Insert any extra domains provided
+        if (formattedDomains.length > existingDomains.length) {
+          const toInsert = formattedDomains.slice(existingDomains.length).map((d) => ({
+            user_id: user!.id,
+            domain_url: d,
+          }));
+          const { error: insertError } = await supabase.from("domains").insert(toInsert);
+          if (insertError) throw insertError;
+        }
       }
 
       toast.success("User updated successfully!");
