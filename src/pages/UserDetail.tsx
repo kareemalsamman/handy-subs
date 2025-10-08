@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, ArrowLeft, Plus, ExternalLink, Edit, Trash2, Filter } from "lucide-react";
+import { Loader2, ArrowLeft, Plus, ExternalLink, Edit, Trash2, Filter, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -134,6 +134,14 @@ const UserDetail = () => {
     }
   };
 
+  const getDaysUntilExpire = (expireDate: string) => {
+    const now = new Date();
+    const expire = new Date(expireDate);
+    const diffTime = expire.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -238,17 +246,29 @@ const UserDetail = () => {
           <div className="space-y-3">
             {user.subscriptions
               .filter(sub => selectedDomainFilter === "all" || sub.domain_id === selectedDomainFilter)
-              .map((sub) => (
+              .map((sub) => {
+                const daysLeft = getDaysUntilExpire(sub.expire_date);
+                const isExpiringSoon = sub.status === 'active' && daysLeft >= 0 && daysLeft <= 30;
+                
+                return (
               <Card key={sub.id} className="glass p-4">
                 <div className="flex items-start justify-between mb-3">
-                  <Badge
-                    className={cn(
-                      "text-xs font-semibold border capitalize",
-                      getStatusBadgeClasses(sub.status)
+                  <div className="flex items-center gap-2">
+                    <Badge
+                      className={cn(
+                        "text-xs font-semibold border capitalize",
+                        getStatusBadgeClasses(sub.status)
+                      )}
+                    >
+                      {sub.status}
+                    </Badge>
+                    {isExpiringSoon && (
+                      <Badge variant="destructive" className="text-xs font-semibold flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        {daysLeft}d left
+                      </Badge>
                     )}
-                  >
-                    {sub.status}
-                  </Badge>
+                  </div>
                   <div className="flex gap-1">
                     <Button
                       size="icon"
@@ -323,7 +343,8 @@ const UserDetail = () => {
                   </div>
                 </div>
               </Card>
-            ))}
+            );
+          })}
           </div>
         ) : (
           <Card className="glass-strong p-8 text-center">
