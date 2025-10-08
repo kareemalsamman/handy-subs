@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2, Plus, Trash2 } from "lucide-react";
 import { User } from "@/pages/Dashboard";
-import { COMPANIES } from "@/components/CompanyTabs";
+import { COMPANIES } from "@/components/dashboard/CompanyTabs";
 
 interface EditUserDialogProps {
   open: boolean;
