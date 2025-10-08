@@ -177,7 +177,7 @@ export const UsersTable = ({ users, onRefresh, onEdit }: UsersTableProps) => {
                       href={(function(){
                         const digits = user.phone_number.replace(/\D/g, '');
                         const phoneNumber = digits.startsWith('0') ? `972${digits.slice(1)}` : digits;
-                        return `https://api.whatsapp.com/send/?phone=${phoneNumber}&text&type=phone_number&app_absent=0`;
+                        return `https://wa.me/${phoneNumber}`;
                       })()}
                       target="_blank"
                       rel="noopener noreferrer"
