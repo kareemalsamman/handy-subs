@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 
-export const COMPANIES = ["Ajad", "soft", "spex", "almas", "others"] as const;
+export const COMPANIES = ["Ajad", "Soft", "Spex", "Almas", "Others"] as const;
 export const ALL_COMPANIES = "All Companies";
 
 const companies = [ALL_COMPANIES, ...COMPANIES];

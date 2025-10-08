@@ -148,12 +148,14 @@ export const EditUserDialog = ({ open, onOpenChange, onSuccess, user }: EditUser
             </Label>
             <Select value={formData.company} onValueChange={(value) => setFormData({ ...formData, company: value })}>
               <SelectTrigger className="mt-1">
-                <SelectValue />
+                <SelectValue placeholder="Select company" />
               </SelectTrigger>
               <SelectContent className="bg-popover z-50">
+                <SelectItem value="Ajad">Ajad</SelectItem>
+                <SelectItem value="Soft">Soft</SelectItem>
+                <SelectItem value="Spex">Spex</SelectItem>
+                <SelectItem value="Almas">Almas</SelectItem>
                 <SelectItem value="Others">Others</SelectItem>
-                <SelectItem value="R-Server">R-Server</SelectItem>
-                <SelectItem value="Server">Server</SelectItem>
               </SelectContent>
             </Select>
           </div>

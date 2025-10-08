@@ -19,7 +19,7 @@ export const AddUserDialog = ({ open, onOpenChange, onSuccess }: AddUserDialogPr
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     username: "",
-    company: "others",
+    company: "Others",
     phone_number: "",
     domains: [""],
   });
@@ -104,7 +104,7 @@ export const AddUserDialog = ({ open, onOpenChange, onSuccess }: AddUserDialogPr
       // Reset form
       setFormData({
         username: "",
-        company: "others",
+        company: "Others",
         phone_number: "",
         domains: [""],
       });
@@ -146,10 +146,10 @@ export const AddUserDialog = ({ open, onOpenChange, onSuccess }: AddUserDialogPr
               </SelectTrigger>
               <SelectContent className="bg-popover z-50">
                 <SelectItem value="Ajad">Ajad</SelectItem>
-                <SelectItem value="soft">soft</SelectItem>
-                <SelectItem value="spex">spex</SelectItem>
-                <SelectItem value="almas">almas</SelectItem>
-                <SelectItem value="others">others</SelectItem>
+                <SelectItem value="Soft">Soft</SelectItem>
+                <SelectItem value="Spex">Spex</SelectItem>
+                <SelectItem value="Almas">Almas</SelectItem>
+                <SelectItem value="Others">Others</SelectItem>
               </SelectContent>
             </Select>
           </div>

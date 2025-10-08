@@ -151,9 +151,21 @@ const Dashboard = () => {
 
     // Filter by status
     if (selectedStatus !== "All Status") {
-      filtered = filtered.filter(user => 
-        user.subscriptions?.some(sub => sub.status === selectedStatus.toLowerCase())
-      );
+      if (selectedStatus === "Expire Soon") {
+        // Filter users with domains expiring within 30 days
+        const now = new Date();
+        const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+        filtered = filtered.filter(user => 
+          user.subscriptions?.some(sub => {
+            const expireDate = new Date(sub.expire_date);
+            return sub.status === 'active' && expireDate >= now && expireDate <= thirtyDaysFromNow;
+          })
+        );
+      } else {
+        filtered = filtered.filter(user => 
+          user.subscriptions?.some(sub => sub.status === selectedStatus.toLowerCase())
+        );
+      }
     }
 
     // Filter by search query
@@ -289,6 +301,7 @@ const Dashboard = () => {
               <SelectItem value="Active">Active</SelectItem>
               <SelectItem value="Expired">Expired</SelectItem>
               <SelectItem value="Cancelled">Cancelled</SelectItem>
+              <SelectItem value="Expire Soon">Expire Soon</SelectItem>
             </SelectContent>
           </Select>
           <Button

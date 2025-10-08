@@ -2,10 +2,11 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, ArrowLeft, Plus, ExternalLink, Edit, Trash2 } from "lucide-react";
+import { Loader2, ArrowLeft, Plus, ExternalLink, Edit, Trash2, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AddSubscriptionDialog } from "@/components/user-detail/AddSubscriptionDialog";
 import { EditSubscriptionDialog } from "@/components/user-detail/EditSubscriptionDialog";
 import { TestSMSDialog } from "@/components/user-detail/TestSMSDialog";
@@ -49,6 +50,7 @@ const UserDetail = () => {
   const [isTestSMSOpen, setIsTestSMSOpen] = useState(false);
   const [selectedSub, setSelectedSub] = useState<any>(null);
   const [deleteSubId, setDeleteSubId] = useState<string | null>(null);
+  const [selectedDomainFilter, setSelectedDomainFilter] = useState<string>("all");
 
   useEffect(() => {
     if (userId) {
@@ -210,9 +212,33 @@ const UserDetail = () => {
           </Button>
         </div>
 
+        {/* Domain Filter */}
+        {user.domains && user.domains.length > 1 && (
+          <div className="mb-3">
+            <Select value={selectedDomainFilter} onValueChange={setSelectedDomainFilter}>
+              <SelectTrigger className="w-full border-border">
+                <div className="flex items-center gap-2">
+                  <Filter className="h-4 w-4" />
+                  <SelectValue />
+                </div>
+              </SelectTrigger>
+              <SelectContent className="bg-popover z-50">
+                <SelectItem value="all">All Domains</SelectItem>
+                {user.domains.map((domain) => (
+                  <SelectItem key={domain.id} value={domain.id}>
+                    {domain.domain_url}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
         {user.subscriptions && user.subscriptions.length > 0 ? (
           <div className="space-y-3">
-            {user.subscriptions.map((sub) => (
+            {user.subscriptions
+              .filter(sub => selectedDomainFilter === "all" || sub.domain_id === selectedDomainFilter)
+              .map((sub) => (
               <Card key={sub.id} className="glass p-4">
                 <div className="flex items-start justify-between mb-3">
                   <Badge
