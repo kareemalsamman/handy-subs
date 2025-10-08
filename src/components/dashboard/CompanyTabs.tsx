@@ -1,6 +1,9 @@
 import { cn } from "@/lib/utils";
 
-const companies = ["All Companies", "Ajad", "soft", "spex", "almas", "others"];
+export const COMPANIES = ["Ajad", "soft", "spex", "almas", "others"] as const;
+export const ALL_COMPANIES = "All Companies";
+
+const companies = [ALL_COMPANIES, ...COMPANIES];
 
 interface CompanyTabsProps {
   selectedCompany: string;
@@ -18,7 +21,7 @@ export const CompanyTabs = ({ selectedCompany, onSelectCompany }: CompanyTabsPro
             "px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap transition-all duration-normal",
             selectedCompany === company
               ? "bg-gradient-primary text-white shadow-glow scale-105"
-              : "bg-card text-foreground hover:bg-secondary border border-border"
+              : "bg-card text-foreground hover:bg-secondary border border-border",
           )}
         >
           {company}
