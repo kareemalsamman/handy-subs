@@ -173,17 +173,20 @@ export const UsersTable = ({ users, onRefresh, onEdit }: UsersTableProps) => {
                       <span>📱</span>
                       <span className="font-medium">{user.phone_number}</span>
                     </a>
-                    <Button
-                      size="icon"
-                      className="h-7 w-7 bg-green-600 hover:bg-green-700 text-white"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const phoneNumber = user.phone_number.replace(/^0/, '972');
-                        window.open(`https://api.whatsapp.com/send/?phone=${phoneNumber}&text&type=phone_number&app_absent=0`, '_blank');
-                      }}
+                    <a
+                      href={(function(){
+                        const digits = user.phone_number.replace(/\D/g, '');
+                        const phoneNumber = digits.startsWith('0') ? `972${digits.slice(1)}` : digits;
+                        return `https://api.whatsapp.com/send/?phone=${phoneNumber}&text&type=phone_number&app_absent=0`;
+                      })()}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="h-7 w-7 inline-flex items-center justify-center rounded-md bg-success text-success-foreground hover:opacity-90"
+                      aria-label="Open WhatsApp chat"
                     >
                       <MessageCircle className="h-4 w-4" />
-                    </Button>
+                    </a>
                   </div>
                   
                   {/* Display subscriptions grouped by domain */}

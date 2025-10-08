@@ -94,20 +94,32 @@ export const EditUserDialog = ({ open, onOpenChange, onSuccess, user }: EditUser
 
       if (userError) throw userError;
 
-      // Delete old domains
-      const { error: deleteDomainsError } = await supabase.from("domains").delete().eq("user_id", user!.id);
+      // Update or insert domains without deleting to preserve subscriptions
+      const existingDomains = user?.domains || [];
+      const formattedDomains = validDomains.map((d) => formatDomain(d));
 
-      if (deleteDomainsError) throw deleteDomainsError;
+      // Update existing domains (by index)
+      for (let i = 0; i < Math.min(existingDomains.length, formattedDomains.length); i++) {
+        const current = existingDomains[i];
+        const newUrl = formattedDomains[i];
+        if (current.domain_url !== newUrl) {
+          const { error: updateDomainError } = await supabase
+            .from("domains")
+            .update({ domain_url: newUrl })
+            .eq("id", current.id);
+          if (updateDomainError) throw updateDomainError;
+        }
+      }
 
-      // Insert new domains
-      const domainsToInsert = validDomains.map((d) => ({
-        user_id: user!.id,
-        domain_url: formatDomain(d),
-      }));
-
-      const { error: domainsError } = await supabase.from("domains").insert(domainsToInsert);
-
-      if (domainsError) throw domainsError;
+      // Insert any extra domains provided
+      if (formattedDomains.length > existingDomains.length) {
+        const toInsert = formattedDomains.slice(existingDomains.length).map((d) => ({
+          user_id: user!.id,
+          domain_url: d,
+        }));
+        const { error: insertError } = await supabase.from("domains").insert(toInsert);
+        if (insertError) throw insertError;
+      }
 
       toast.success("User updated successfully!");
       onSuccess();
