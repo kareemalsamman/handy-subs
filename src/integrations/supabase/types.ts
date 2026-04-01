@@ -319,10 +319,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      get_monthly_cost_per_user: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
+      get_monthly_cost_per_user: { Args: never; Returns: number }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -330,10 +327,7 @@ export type Database = {
         }
         Returns: boolean
       }
-      update_subscription_status: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      update_subscription_status: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "user"
