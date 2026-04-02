@@ -81,24 +81,100 @@ const WordPressUpdates = () => {
     }
   };
 
+  // Helper: build API URL from wordpress_admin_url
+  const getApiBase = (adminUrl: string) => {
+    const base = adminUrl.replace(/\/wp-admin\/?$/, '').replace(/\/$/, '');
+    return `${base}/wp-json/handy-manager/v1`;
+  };
+
+  // Call a single WordPress site to check for updates
+  const checkSingleDomain = async (domain: DomainStatus) => {
+    const apiBase = getApiBase(domain.wordpress_admin_url!);
+
+    const response = await fetch(`${apiBase}/status`, {
+      method: 'GET',
+      headers: { 'X-Handy-Secret': domain.wordpress_secret_key!, 'Accept': 'application/json' },
+    });
+
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const data = await response.json();
+    if (!data.success) throw new Error("Plugin returned error");
+
+    const hasUpdates = data.core_update || data.plugins_count > 0 || data.themes_count > 0;
+
+    // Update DB
+    await supabase.from('domains').update({
+      wordpress_update_available: hasUpdates,
+      plugins_updates_count: data.plugins_count || 0,
+      themes_updates_count: data.themes_count || 0,
+      last_checked: new Date().toISOString(),
+    }).eq('id', domain.id);
+
+    await supabase.from('wordpress_update_logs').insert({
+      domain_id: domain.id,
+      status: 'checked',
+      details: JSON.stringify({ plugins_count: data.plugins_count, themes_count: data.themes_count, core_update: data.core_update }),
+    });
+
+    return data;
+  };
+
+  // Call a single WordPress site to run updates
+  const updateSingleDomain = async (domain: DomainStatus) => {
+    const apiBase = getApiBase(domain.wordpress_admin_url!);
+
+    const response = await fetch(`${apiBase}/update`, {
+      method: 'POST',
+      headers: {
+        'X-Handy-Secret': domain.wordpress_secret_key!,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify({ type: 'all' }),
+    });
+
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const data = await response.json();
+
+    // Mark as up-to-date
+    await supabase.from('domains').update({
+      wordpress_update_available: false,
+      plugins_updates_count: 0,
+      themes_updates_count: 0,
+      last_checked: new Date().toISOString(),
+    }).eq('id', domain.id);
+
+    await supabase.from('wordpress_update_logs').insert({
+      domain_id: domain.id,
+      status: 'updated',
+      details: JSON.stringify(data.results),
+    });
+
+    return data;
+  };
+
   const handleCheckAll = async () => {
     try {
       setIsChecking(true);
-      toast.info("Checking all WordPress sites for updates...");
+      let checked = 0, errors = 0;
 
-      const { data, error } = await supabase.functions.invoke("run-wordpress-updates", {
-        body: { mode: "check" },
-      });
+      for (const domain of domains) {
+        try {
+          await checkSingleDomain(domain);
+          checked++;
+        } catch (err: any) {
+          errors++;
+          console.error(`Error checking ${domain.domain_url}:`, err);
+          await supabase.from('wordpress_update_logs').insert({
+            domain_id: domain.id, status: 'error',
+            details: JSON.stringify({ error: err.message }),
+          });
+        }
+      }
 
-      if (error) throw error;
-
-      const summary = data?.summary;
-      toast.success(
-        `Check complete: ${summary?.checked || 0} checked, ${summary?.errors || 0} errors`
-      );
+      toast.success(`Check complete: ${checked} checked, ${errors} errors`);
       await fetchDomains();
     } catch (error: any) {
-      console.error("Error checking updates:", error);
       toast.error(error.message || "Failed to check for updates");
     } finally {
       setIsChecking(false);
@@ -106,57 +182,39 @@ const WordPressUpdates = () => {
   };
 
   const handleCheckOne = async (domainId: string) => {
+    const domain = domains.find(d => d.id === domainId);
+    if (!domain) return;
+
     try {
       setIsUpdating(domainId);
-      toast.info("Checking site for updates...");
+      const data = await checkSingleDomain(domain);
 
-      const { data, error } = await supabase.functions.invoke("run-wordpress-updates", {
-        body: { mode: "check", domain_id: domainId },
-      });
-
-      if (error) throw error;
-      if (!data || !data.results || data.results.length === 0) {
-        throw new Error("No response from server. Make sure the edge function is deployed.");
-      }
-
-      const result = data.results[0];
-      if (result.status === "error") {
-        toast.error(`Error: ${result.details?.error}`);
-      } else if (result.status === "checked") {
-        const d = result.details;
-        const total = (d?.plugins_count || 0) + (d?.themes_count || 0) + (d?.core_update ? 1 : 0);
-        toast.success(
-          total > 0
-            ? `Found ${total} update(s): ${d?.plugins_count || 0} plugins, ${d?.themes_count || 0} themes${d?.core_update ? ', core' : ''}`
-            : "Site is up to date!"
-        );
-      }
+      const total = (data.plugins_count || 0) + (data.themes_count || 0) + (data.core_update ? 1 : 0);
+      toast.success(
+        total > 0
+          ? `Found ${total} update(s): ${data.plugins_count || 0} plugins, ${data.themes_count || 0} themes${data.core_update ? ', core' : ''}`
+          : "Site is up to date!"
+      );
       await fetchDomains();
     } catch (error: any) {
       console.error("Error checking domain:", error);
-      toast.error(error.message || "Failed to check domain");
+      toast.error(error.message?.includes("Failed to fetch")
+        ? "Cannot reach site — check plugin is installed and re-uploaded"
+        : (error.message || "Failed to check domain"));
     } finally {
       setIsUpdating(null);
     }
   };
 
   const handleUpdateOne = async (domainId: string, domainUrl: string) => {
+    const domain = domains.find(d => d.id === domainId);
+    if (!domain) return;
+
     try {
       setIsUpdating(domainId);
       toast.info(`Updating ${domainUrl}...`);
-
-      const { data, error } = await supabase.functions.invoke("run-wordpress-updates", {
-        body: { mode: "update", domain_id: domainId, update_type: "all" },
-      });
-
-      if (error) throw error;
-
-      const result = data?.results?.[0];
-      if (result?.status === "error") {
-        toast.error(`Error: ${result.details?.error}`);
-      } else {
-        toast.success(`${domainUrl} updated successfully!`);
-      }
+      await updateSingleDomain(domain);
+      toast.success(`${domainUrl} updated successfully!`);
       await fetchDomains();
     } catch (error: any) {
       console.error("Error updating domain:", error);
@@ -169,21 +227,22 @@ const WordPressUpdates = () => {
   const handleUpdateAll = async () => {
     try {
       setIsChecking(true);
-      toast.info("Updating all WordPress sites...");
+      const toUpdate = domains.filter(d => d.wordpress_update_available);
+      let updated = 0, errors = 0;
 
-      const { data, error } = await supabase.functions.invoke("run-wordpress-updates", {
-        body: { mode: "update", update_type: "all" },
-      });
+      for (const domain of toUpdate) {
+        try {
+          await updateSingleDomain(domain);
+          updated++;
+        } catch (err: any) {
+          errors++;
+          console.error(`Error updating ${domain.domain_url}:`, err);
+        }
+      }
 
-      if (error) throw error;
-
-      const summary = data?.summary;
-      toast.success(
-        `Update complete: ${summary?.updated || 0} updated, ${summary?.errors || 0} errors`
-      );
+      toast.success(`Update complete: ${updated} updated, ${errors} errors`);
       await fetchDomains();
     } catch (error: any) {
-      console.error("Error updating all:", error);
       toast.error(error.message || "Failed to update sites");
     } finally {
       setIsChecking(false);

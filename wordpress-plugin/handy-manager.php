@@ -19,6 +19,31 @@ class Handy_Manager {
         add_action('rest_api_init', [$this, 'register_routes']);
         add_action('admin_menu', [$this, 'add_settings_page']);
         add_action('admin_init', [$this, 'register_settings']);
+        add_action('rest_api_init', [$this, 'add_cors_headers'], 15);
+    }
+
+    /**
+     * Add CORS headers so the Handy-Subs app can call this API from the browser
+     */
+    public function add_cors_headers() {
+        // Handle preflight OPTIONS requests
+        if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+            header('Access-Control-Allow-Origin: *');
+            header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+            header('Access-Control-Allow-Headers: X-Handy-Secret, Content-Type, Accept');
+            header('Access-Control-Max-Age: 86400');
+            status_header(200);
+            exit;
+        }
+
+        // Add CORS headers to all REST API responses
+        remove_filter('rest_pre_serve_request', 'rest_send_cors_headers');
+        add_filter('rest_pre_serve_request', function ($value) {
+            header('Access-Control-Allow-Origin: *');
+            header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+            header('Access-Control-Allow-Headers: X-Handy-Secret, Content-Type, Accept');
+            return $value;
+        });
     }
 
     /**

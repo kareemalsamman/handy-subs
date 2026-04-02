@@ -67,34 +67,52 @@ const UserDetail = () => {
     setWpStatus(prev => ({ ...prev, [domain.id]: { status: "loading" } }));
 
     try {
-      // Call through edge function (server-side) to avoid CORS
-      const { data, error } = await supabase.functions.invoke("run-wordpress-updates", {
-        body: { mode: "check", domain_id: domain.id },
+      // Call WordPress plugin directly
+      let baseUrl = domain.wordpress_admin_url.replace(/\/wp-admin\/?$/, '').replace(/\/$/, '');
+      const apiUrl = `${baseUrl}/wp-json/handy-manager/v1/status`;
+
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          'X-Handy-Secret': domain.wordpress_secret_key,
+          'Accept': 'application/json',
+        },
       });
 
-      if (error) throw error;
-      if (!data?.results?.length) throw new Error("No response from server");
-
-      const result = data.results[0];
-      if (result.status === "error") {
-        throw new Error(result.details?.error || "Connection failed");
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(`HTTP ${response.status}: ${text.substring(0, 100)}`);
       }
 
-      const d = result.details;
-      const total = (d?.plugins_count || 0) + (d?.themes_count || 0) + (d?.core_update ? 1 : 0);
-      setWpStatus(prev => ({
-        ...prev,
-        [domain.id]: {
-          status: "connected",
-          message: `WP ${d?.wp_version || '?'} | ${total} update${total !== 1 ? 's' : ''} available`,
-        },
-      }));
+      const data = await response.json();
+
+      if (data.success) {
+        const total = (data.plugins_count || 0) + (data.themes_count || 0) + (data.core_update ? 1 : 0);
+
+        // Update domain record in DB
+        await supabase.from('domains').update({
+          wordpress_update_available: total > 0,
+          plugins_updates_count: data.plugins_count || 0,
+          themes_updates_count: data.themes_count || 0,
+          last_checked: new Date().toISOString(),
+        }).eq('id', domain.id);
+
+        setWpStatus(prev => ({
+          ...prev,
+          [domain.id]: {
+            status: "connected",
+            message: `WP ${data.wp_version} | ${total} update${total !== 1 ? 's' : ''} available`,
+          },
+        }));
+      } else {
+        throw new Error("Plugin returned error");
+      }
     } catch (error: any) {
       setWpStatus(prev => ({
         ...prev,
         [domain.id]: {
           status: "error",
-          message: error.message || "Connection failed",
+          message: error.message?.includes("Failed to fetch") ? "Cannot reach site — re-upload the plugin" : error.message,
         },
       }));
     }
