@@ -385,6 +385,7 @@ const WordPressUpdates = () => {
                   onCheck={() => handleCheckOne(domain.id)}
                   onUpdate={() => handleUpdateOne(domain.id, domain.domain_url)}
                   formatDate={formatDate}
+                  onManage={() => navigate(`/site-manager/${domain.id}`)}
                 />
               ))}
             </div>
@@ -407,6 +408,7 @@ const WordPressUpdates = () => {
                   onCheck={() => handleCheckOne(domain.id)}
                   onUpdate={() => handleUpdateOne(domain.id, domain.domain_url)}
                   formatDate={formatDate}
+                  onManage={() => navigate(`/site-manager/${domain.id}`)}
                 />
               ))}
             </div>
@@ -429,6 +431,7 @@ const WordPressUpdates = () => {
                   onCheck={() => handleCheckOne(domain.id)}
                   onUpdate={() => handleUpdateOne(domain.id, domain.domain_url)}
                   formatDate={formatDate}
+                  onManage={() => navigate(`/site-manager/${domain.id}`)}
                 />
               ))}
             </div>
@@ -487,28 +490,25 @@ function DomainCard({
   onCheck,
   onUpdate,
   formatDate,
+  onManage,
 }: {
   domain: DomainStatus;
   isUpdating: boolean;
   onCheck: () => void;
   onUpdate: () => void;
   formatDate: (d: string | null) => string;
+  onManage: () => void;
 }) {
   const totalUpdates = (domain.plugins_updates_count || 0) + (domain.themes_updates_count || 0);
 
   return (
-    <Card className="glass p-4">
+    <Card className="glass p-4 cursor-pointer hover:border-primary/50 transition-colors" onClick={onManage}>
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-2 min-w-0 flex-1">
           <Globe className="h-4 w-4 text-primary shrink-0" />
-          <a
-            href={domain.domain_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-semibold text-sm text-primary hover:underline truncate"
-          >
+          <span className="font-semibold text-sm text-primary truncate">
             {domain.domain_url}
-          </a>
+          </span>
         </div>
         {domain.wordpress_update_available && totalUpdates > 0 && (
           <Badge variant="destructive" className="text-xs shrink-0 ml-2">
@@ -547,7 +547,7 @@ function DomainCard({
         <span className="text-xs text-muted-foreground">
           {domain.users?.username} · {domain.users?.company}
         </span>
-        <div className="flex gap-2">
+        <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
           <Button
             size="sm"
             variant="outline"

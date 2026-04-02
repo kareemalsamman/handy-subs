@@ -8,6 +8,7 @@ import Settings from "./pages/Settings";
 import UserDetail from "./pages/UserDetail";
 import CheckSubscriptionReminders from "./pages/CheckSubscriptionReminders";
 import WordPressUpdates from "./pages/WordPressUpdates";
+import SiteManager from "./pages/SiteManager";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import { ProtectedRoute } from "./components/ProtectedRoute";
@@ -27,6 +28,7 @@ const App = () => (
           <Route path="/user/:userId" element={<ProtectedRoute><UserDetail /></ProtectedRoute>} />
           <Route path="/check-reminders" element={<ProtectedRoute><CheckSubscriptionReminders /></ProtectedRoute>} />
           <Route path="/wordpress-updates" element={<ProtectedRoute><WordPressUpdates /></ProtectedRoute>} />
+          <Route path="/site-manager/:domainId" element={<ProtectedRoute><SiteManager /></ProtectedRoute>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
