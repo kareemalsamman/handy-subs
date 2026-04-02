@@ -115,12 +115,21 @@ const WordPressUpdates = () => {
       });
 
       if (error) throw error;
+      if (!data || !data.results || data.results.length === 0) {
+        throw new Error("No response from server. Make sure the edge function is deployed.");
+      }
 
-      const result = data?.results?.[0];
-      if (result?.status === "error") {
+      const result = data.results[0];
+      if (result.status === "error") {
         toast.error(`Error: ${result.details?.error}`);
-      } else {
-        toast.success("Check complete!");
+      } else if (result.status === "checked") {
+        const d = result.details;
+        const total = (d?.plugins_count || 0) + (d?.themes_count || 0) + (d?.core_update ? 1 : 0);
+        toast.success(
+          total > 0
+            ? `Found ${total} update(s): ${d?.plugins_count || 0} plugins, ${d?.themes_count || 0} themes${d?.core_update ? ', core' : ''}`
+            : "Site is up to date!"
+        );
       }
       await fetchDomains();
     } catch (error: any) {
@@ -192,9 +201,9 @@ const WordPressUpdates = () => {
     return `${day}/${month}/${year} ${hours}:${mins}`;
   };
 
-  const domainsWithUpdates = domains.filter((d) => d.wordpress_update_available);
-  const domainsUpToDate = domains.filter((d) => d.wordpress_update_available === false);
-  const domainsUnchecked = domains.filter((d) => d.wordpress_update_available === null);
+  const domainsWithUpdates = domains.filter((d) => d.last_checked && d.wordpress_update_available);
+  const domainsUpToDate = domains.filter((d) => d.last_checked && !d.wordpress_update_available);
+  const domainsUnchecked = domains.filter((d) => !d.last_checked);
 
   if (isLoading) {
     return (
