@@ -168,10 +168,12 @@ const Dashboard = () => {
       }
     }
 
-    // Filter by search query
+    // Filter by search query (username or domain)
     if (searchQuery) {
+      const query = searchQuery.toLowerCase();
       filtered = filtered.filter(user =>
-        user.username.toLowerCase().includes(searchQuery.toLowerCase())
+        user.username.toLowerCase().includes(query) ||
+        user.domains?.some(domain => domain.domain_url.toLowerCase().includes(query))
       );
     }
 
@@ -277,7 +279,7 @@ const Dashboard = () => {
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search by username..."
+              placeholder="Search by username or domain..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9 border-border focus:border-primary transition-colors"
