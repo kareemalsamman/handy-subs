@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
-// User validation schema
-export const addUserSchema = z.object({
+// Base user fields without company enum
+const baseUserFields = {
   username: z.string()
     .trim()
     .min(1, 'Username is required')
@@ -9,22 +9,35 @@ export const addUserSchema = z.object({
   phone_number: z.string()
     .regex(/^0[0-9]{9}$/, 'Invalid Israeli phone number (must be 10 digits starting with 0)')
     .length(10, 'Phone number must be exactly 10 digits'),
-  company: z.enum(['Ajad', 'Soft', 'Spex', 'Almas', 'Others'], {
-    errorMap: () => ({ message: 'Invalid company selection' })
-  }),
   domains: z.array(
     z.string()
       .trim()
       .min(1, 'Domain cannot be empty')
       .max(255, 'Domain must be less than 255 characters')
       .refine((val) => {
-        // Basic domain validation
         const domainRegex = /^[a-zA-Z0-9][a-zA-Z0-9-_.]{0,253}[a-zA-Z0-9]\.[a-zA-Z]{2,}$/;
         const withoutProtocol = val.replace(/^https?:\/\//, '');
         return domainRegex.test(withoutProtocol);
       }, 'Invalid domain format')
   ).min(1, 'At least one domain is required'),
+};
+
+// Default schema with hardcoded companies (fallback)
+export const addUserSchema = z.object({
+  ...baseUserFields,
+  company: z.string().min(1, 'Company is required'),
 });
+
+// Dynamic schema factory using categories from DB
+export function createAddUserSchema(categories: string[]) {
+  return z.object({
+    ...baseUserFields,
+    company: z.string().min(1, 'Company is required').refine(
+      (val) => categories.includes(val),
+      { message: 'Invalid company selection' }
+    ),
+  });
+}
 
 // SMS test validation schema
 export const testSmsSchema = z.object({

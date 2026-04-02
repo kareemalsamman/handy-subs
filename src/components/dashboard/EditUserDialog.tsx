@@ -14,9 +14,10 @@ interface EditUserDialogProps {
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
   user: User | null;
+  categories?: string[];
 }
 
-export const EditUserDialog = ({ open, onOpenChange, onSuccess, user }: EditUserDialogProps) => {
+export const EditUserDialog = ({ open, onOpenChange, onSuccess, user, categories = [] }: EditUserDialogProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     username: "",
@@ -170,11 +171,9 @@ export const EditUserDialog = ({ open, onOpenChange, onSuccess, user }: EditUser
                 <SelectValue placeholder="Select company" />
               </SelectTrigger>
               <SelectContent className="bg-popover z-50">
-                <SelectItem value="Ajad">Ajad</SelectItem>
-                <SelectItem value="Soft">Soft</SelectItem>
-                <SelectItem value="Spex">Spex</SelectItem>
-                <SelectItem value="Almas">Almas</SelectItem>
-                <SelectItem value="Others">Others</SelectItem>
+                {categories.map((cat) => (
+                  <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>

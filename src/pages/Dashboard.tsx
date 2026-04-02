@@ -13,6 +13,7 @@ import { UsersTable } from "@/components/dashboard/UsersTable";
 import { AddUserDialog } from "@/components/dashboard/AddUserDialog";
 import { EditUserDialog } from "@/components/dashboard/EditUserDialog";
 import { NotificationsModal } from "@/components/dashboard/NotificationsModal";
+import { useCategories } from "@/hooks/useCategories";
 
 export type User = {
   id: string;
@@ -54,6 +55,7 @@ const Dashboard = () => {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
+  const { categories } = useCategories();
 
   useEffect(() => {
     fetchData();
@@ -272,6 +274,7 @@ const Dashboard = () => {
         <CompanyTabs
           selectedCompany={selectedCompany}
           onSelectCompany={setSelectedCompany}
+          categories={categories}
         />
 
         {/* Search and Actions */}
@@ -334,6 +337,7 @@ const Dashboard = () => {
         open={isAddDialogOpen}
         onOpenChange={setIsAddDialogOpen}
         onSuccess={fetchData}
+        categories={categories}
       />
 
       {/* Edit User Dialog */}
@@ -345,6 +349,7 @@ const Dashboard = () => {
           setSelectedUser(null);
         }}
         user={selectedUser}
+        categories={categories}
       />
 
       {/* Notifications Modal */}

@@ -7,15 +7,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2, Plus, Trash2 } from "lucide-react";
-import { addUserSchema } from "@/lib/validation";
+import { addUserSchema, createAddUserSchema } from "@/lib/validation";
 
 interface AddUserDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
+  categories?: string[];
 }
 
-export const AddUserDialog = ({ open, onOpenChange, onSuccess }: AddUserDialogProps) => {
+export const AddUserDialog = ({ open, onOpenChange, onSuccess, categories = [] }: AddUserDialogProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     username: "",
@@ -58,7 +59,8 @@ export const AddUserDialog = ({ open, onOpenChange, onSuccess }: AddUserDialogPr
     
     // Validate with zod schema
     const validDomains = formData.domains.filter(d => d.trim());
-    const result = addUserSchema.safeParse({
+    const schema = categories.length > 0 ? createAddUserSchema(categories) : addUserSchema;
+    const result = schema.safeParse({
       ...formData,
       domains: validDomains,
     });
@@ -145,11 +147,9 @@ export const AddUserDialog = ({ open, onOpenChange, onSuccess }: AddUserDialogPr
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="bg-popover z-50">
-                <SelectItem value="Ajad">Ajad</SelectItem>
-                <SelectItem value="Soft">Soft</SelectItem>
-                <SelectItem value="Spex">Spex</SelectItem>
-                <SelectItem value="Almas">Almas</SelectItem>
-                <SelectItem value="Others">Others</SelectItem>
+                {categories.map((cat) => (
+                  <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>

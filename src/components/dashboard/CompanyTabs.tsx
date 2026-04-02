@@ -1,19 +1,19 @@
 import { cn } from "@/lib/utils";
 
-export const COMPANIES = ["Ajad", "Soft", "Spex", "Almas", "Others"] as const;
 export const ALL_COMPANIES = "All Companies";
-
-const companies = [ALL_COMPANIES, ...COMPANIES];
 
 interface CompanyTabsProps {
   selectedCompany: string;
   onSelectCompany: (company: string) => void;
+  categories: string[];
 }
 
-export const CompanyTabs = ({ selectedCompany, onSelectCompany }: CompanyTabsProps) => {
+export const CompanyTabs = ({ selectedCompany, onSelectCompany, categories }: CompanyTabsProps) => {
+  const tabs = [ALL_COMPANIES, ...categories];
+
   return (
     <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-      {companies.map((company) => (
+      {tabs.map((company) => (
         <button
           key={company}
           onClick={() => onSelectCompany(company)}

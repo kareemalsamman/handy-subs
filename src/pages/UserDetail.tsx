@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, ArrowLeft, Plus, ExternalLink, Edit, Trash2, Filter, Clock, Settings } from "lucide-react";
+import { Loader2, ArrowLeft, Plus, ExternalLink, Edit, Trash2, Filter, Clock, Settings, RefreshCw, CheckCircle2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -56,12 +56,67 @@ const UserDetail = () => {
   const [selectedDomainFilter, setSelectedDomainFilter] = useState<string>("all");
   const [isWPDialogOpen, setIsWPDialogOpen] = useState(false);
   const [selectedDomain, setSelectedDomain] = useState<any>(null);
+  const [wpStatus, setWpStatus] = useState<Record<string, { status: "loading" | "connected" | "error" | "not_configured"; message?: string }>>({});
+
+  const checkWPConnection = async (domain: { id: string; domain_url: string; wordpress_admin_url?: string | null; wordpress_secret_key?: string | null }) => {
+    if (!domain.wordpress_admin_url || !domain.wordpress_secret_key) {
+      setWpStatus(prev => ({ ...prev, [domain.id]: { status: "not_configured" } }));
+      return;
+    }
+
+    setWpStatus(prev => ({ ...prev, [domain.id]: { status: "loading" } }));
+
+    try {
+      let baseUrl = domain.wordpress_admin_url.replace(/\/wp-admin\/?$/, '').replace(/\/$/, '');
+      const apiUrl = `${baseUrl}/wp-json/handy-manager/v1/status`;
+
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: { 'X-Handy-Secret': domain.wordpress_secret_key, 'Accept': 'application/json' },
+      });
+
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const data = await response.json();
+
+      if (data.success) {
+        const total = (data.plugins_count || 0) + (data.themes_count || 0) + (data.core_update ? 1 : 0);
+        setWpStatus(prev => ({
+          ...prev,
+          [domain.id]: {
+            status: "connected",
+            message: `WP ${data.wp_version} | ${total} update${total !== 1 ? 's' : ''} available`,
+          },
+        }));
+      } else {
+        throw new Error("Plugin returned error");
+      }
+    } catch (error: any) {
+      setWpStatus(prev => ({
+        ...prev,
+        [domain.id]: {
+          status: "error",
+          message: error.message?.includes("Failed to fetch") ? "Cannot reach site" : error.message,
+        },
+      }));
+    }
+  };
 
   useEffect(() => {
     if (userId) {
       fetchUser();
     }
   }, [userId]);
+
+  // Auto-check WP connection for domains with credentials
+  useEffect(() => {
+    if (user?.domains) {
+      user.domains.forEach(domain => {
+        if (domain.wordpress_admin_url && domain.wordpress_secret_key) {
+          checkWPConnection(domain);
+        }
+      });
+    }
+  }, [user?.id]);
 
   const fetchUser = async () => {
     try {
@@ -193,35 +248,71 @@ const UserDetail = () => {
           <h2 className="text-lg font-semibold text-foreground mb-3">Domains</h2>
           {user.domains && user.domains.length > 0 ? (
             <div className="space-y-3">
-              {user.domains.map((domain) => (
-                <div key={domain.id} className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2 text-primary min-w-0 flex-1">
-                    <ExternalLink className="h-4 w-4 shrink-0" />
-                    <a
-                      href={domain.domain_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="hover:underline font-medium text-sm truncate"
-                    >
-                      {domain.domain_url}
-                    </a>
-                    {domain.wordpress_admin_url && (
-                      <Badge className="bg-blue-100 text-blue-700 border-blue-200 text-[10px] shrink-0">WP</Badge>
+              {user.domains.map((domain) => {
+                const status = wpStatus[domain.id];
+                return (
+                  <div key={domain.id} className="glass p-3 rounded-lg space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 text-primary min-w-0 flex-1">
+                        <ExternalLink className="h-4 w-4 shrink-0" />
+                        <a
+                          href={domain.domain_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="hover:underline font-medium text-sm truncate"
+                        >
+                          {domain.domain_url}
+                        </a>
+                      </div>
+                      <div className="flex gap-1 shrink-0">
+                        {domain.wordpress_admin_url && (
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7"
+                            onClick={() => checkWPConnection(domain)}
+                            disabled={status?.status === "loading"}
+                          >
+                            {status?.status === "loading" ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <RefreshCw className="h-3.5 w-3.5" />
+                            )}
+                          </Button>
+                        )}
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-7 w-7"
+                          onClick={() => {
+                            setSelectedDomain(domain);
+                            setIsWPDialogOpen(true);
+                          }}
+                        >
+                          <Settings className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* WP Connection Status */}
+                    {domain.wordpress_admin_url && status && status.status !== "loading" && (
+                      <div className={cn(
+                        "flex items-center gap-2 text-xs px-2 py-1.5 rounded",
+                        status.status === "connected" && "bg-green-500/10 text-green-500",
+                        status.status === "error" && "bg-red-500/10 text-red-500",
+                        status.status === "not_configured" && "bg-yellow-500/10 text-yellow-500",
+                      )}>
+                        {status.status === "connected" && <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />}
+                        {status.status === "error" && <XCircle className="h-3.5 w-3.5 shrink-0" />}
+                        <span>{status.message || (status.status === "not_configured" ? "WP not configured" : "")}</span>
+                      </div>
+                    )}
+                    {!domain.wordpress_admin_url && (
+                      <p className="text-xs text-muted-foreground">No WordPress configured</p>
                     )}
                   </div>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="h-7 w-7 shrink-0"
-                    onClick={() => {
-                      setSelectedDomain(domain);
-                      setIsWPDialogOpen(true);
-                    }}
-                  >
-                    <Settings className="h-3.5 w-3.5" />
-                  </Button>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <p className="text-sm text-muted-foreground">No domains</p>
