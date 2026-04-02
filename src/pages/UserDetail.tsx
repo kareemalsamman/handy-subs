@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, ArrowLeft, Plus, ExternalLink, Edit, Trash2, Filter, Clock } from "lucide-react";
+import { Loader2, ArrowLeft, Plus, ExternalLink, Edit, Trash2, Filter, Clock, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { AddSubscriptionDialog } from "@/components/user-detail/AddSubscriptionDialog";
 import { EditSubscriptionDialog } from "@/components/user-detail/EditSubscriptionDialog";
 import { TestSMSDialog } from "@/components/user-detail/TestSMSDialog";
+import { EditDomainWPDialog } from "@/components/user-detail/EditDomainWPDialog";
 import { cn } from "@/lib/utils";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
@@ -19,9 +20,11 @@ interface User {
   company: string;
   phone_number: string;
   created_at: string;
-  domains: { 
-    id: string; 
+  domains: {
+    id: string;
     domain_url: string;
+    wordpress_admin_url?: string | null;
+    wordpress_secret_key?: string | null;
   }[];
   subscriptions: {
     id: string;
@@ -51,6 +54,8 @@ const UserDetail = () => {
   const [selectedSub, setSelectedSub] = useState<any>(null);
   const [deleteSubId, setDeleteSubId] = useState<string | null>(null);
   const [selectedDomainFilter, setSelectedDomainFilter] = useState<string>("all");
+  const [isWPDialogOpen, setIsWPDialogOpen] = useState(false);
+  const [selectedDomain, setSelectedDomain] = useState<any>(null);
 
   useEffect(() => {
     if (userId) {
@@ -187,18 +192,34 @@ const UserDetail = () => {
         <Card className="glass-strong p-4">
           <h2 className="text-lg font-semibold text-foreground mb-3">Domains</h2>
           {user.domains && user.domains.length > 0 ? (
-            <div className="space-y-2">
+            <div className="space-y-3">
               {user.domains.map((domain) => (
-                <div key={domain.id} className="flex items-center gap-2 text-primary">
-                  <ExternalLink className="h-4 w-4 shrink-0" />
-                  <a
-                    href={domain.domain_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="hover:underline font-medium text-sm"
+                <div key={domain.id} className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 text-primary min-w-0 flex-1">
+                    <ExternalLink className="h-4 w-4 shrink-0" />
+                    <a
+                      href={domain.domain_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:underline font-medium text-sm truncate"
+                    >
+                      {domain.domain_url}
+                    </a>
+                    {domain.wordpress_admin_url && (
+                      <Badge className="bg-blue-100 text-blue-700 border-blue-200 text-[10px] shrink-0">WP</Badge>
+                    )}
+                  </div>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-7 w-7 shrink-0"
+                    onClick={() => {
+                      setSelectedDomain(domain);
+                      setIsWPDialogOpen(true);
+                    }}
                   >
-                    {domain.domain_url}
-                  </a>
+                    <Settings className="h-3.5 w-3.5" />
+                  </Button>
                 </div>
               ))}
             </div>
@@ -405,6 +426,13 @@ const UserDetail = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <EditDomainWPDialog
+        open={isWPDialogOpen}
+        onOpenChange={setIsWPDialogOpen}
+        domain={selectedDomain}
+        onSuccess={fetchUser}
+      />
     </div>
   );
 };
