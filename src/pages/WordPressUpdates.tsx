@@ -136,18 +136,29 @@ const WordPressUpdates = () => {
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const data = await response.json();
 
-    // Mark as up-to-date
+    // Use real remaining counts from the WordPress response
+    const remaining = data.remaining || {};
+    const hasRemaining = (remaining.plugins_count || 0) > 0 || (remaining.themes_count || 0) > 0 || remaining.core_update;
+
     await supabase.from('domains').update({
-      wordpress_update_available: false,
-      plugins_updates_count: 0,
-      themes_updates_count: 0,
+      wordpress_update_available: hasRemaining,
+      plugins_updates_count: remaining.plugins_count || 0,
+      themes_updates_count: remaining.themes_count || 0,
       last_checked: new Date().toISOString(),
     }).eq('id', domain.id);
 
+    const summary = data.summary || {};
     await supabase.from('wordpress_update_logs').insert({
       domain_id: domain.id,
       status: 'updated',
-      details: JSON.stringify(data.results),
+      details: JSON.stringify({
+        plugins_updated: summary.plugins_updated || 0,
+        plugins_failed: summary.plugins_failed || 0,
+        themes_updated: summary.themes_updated || 0,
+        themes_failed: summary.themes_failed || 0,
+        remaining_plugins: remaining.plugins_count || 0,
+        remaining_themes: remaining.themes_count || 0,
+      }),
     });
 
     return data;
@@ -213,8 +224,15 @@ const WordPressUpdates = () => {
     try {
       setIsUpdating(domainId);
       toast.info(`Updating ${domainUrl}...`);
-      await updateSingleDomain(domain);
-      toast.success(`${domainUrl} updated successfully!`);
+      const data = await updateSingleDomain(domain);
+      const s = data.summary || {};
+      const r = data.remaining || {};
+      const remainingTotal = (r.plugins_count || 0) + (r.themes_count || 0);
+      toast.success(
+        `Updated: ${s.plugins_updated || 0} plugins, ${s.themes_updated || 0} themes` +
+        (s.plugins_failed || s.themes_failed ? ` | Failed: ${(s.plugins_failed || 0) + (s.themes_failed || 0)}` : '') +
+        (remainingTotal > 0 ? ` | ${remainingTotal} still remaining` : '')
+      );
       await fetchDomains();
     } catch (error: any) {
       console.error("Error updating domain:", error);

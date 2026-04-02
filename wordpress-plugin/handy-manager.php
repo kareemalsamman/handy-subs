@@ -154,18 +154,26 @@ class Handy_Manager {
      * Body: { "type": "all" | "core" | "plugins" | "themes", "items": ["plugin-file.php"] }
      */
     public function run_updates($request) {
+        // Increase time limit for bulk updates
+        if (function_exists('set_time_limit')) {
+            set_time_limit(300);
+        }
+
         require_once ABSPATH . 'wp-admin/includes/update.php';
         require_once ABSPATH . 'wp-admin/includes/plugin.php';
         require_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
         require_once ABSPATH . 'wp-admin/includes/file.php';
         require_once ABSPATH . 'wp-admin/includes/misc.php';
+        require_once ABSPATH . 'wp-admin/includes/theme.php';
+
+        // Allow filesystem access without FTP credentials
+        if (!defined('FS_METHOD')) {
+            define('FS_METHOD', 'direct');
+        }
 
         $type  = $request->get_param('type') ?: 'all';
         $items = $request->get_param('items') ?: [];
         $results = ['core' => null, 'plugins' => [], 'themes' => []];
-
-        // Silent upgrader skin - no output
-        $skin = new Automatic_Upgrader_Skin();
 
         // Core update
         if (in_array($type, ['all', 'core'])) {
@@ -173,6 +181,7 @@ class Handy_Manager {
             if (!empty($update_core->updates)) {
                 foreach ($update_core->updates as $update) {
                     if ($update->response === 'upgrade') {
+                        $skin = new Automatic_Upgrader_Skin();
                         $upgrader = new Core_Upgrader($skin);
                         $result = $upgrader->upgrade($update);
                         $results['core'] = is_wp_error($result)
@@ -184,50 +193,122 @@ class Handy_Manager {
             }
         }
 
-        // Plugin updates
+        // Plugin updates — use bulk_upgrade for reliability
         if (in_array($type, ['all', 'plugins'])) {
+            wp_update_plugins();
             $update_plugins = get_site_transient('update_plugins');
             if (!empty($update_plugins->response)) {
-                $upgrader = new Plugin_Upgrader($skin);
-                foreach ($update_plugins->response as $plugin_file => $plugin_data) {
-                    if (!empty($items) && !in_array($plugin_file, $items)) {
-                        continue;
-                    }
-                    $result = $upgrader->upgrade($plugin_file);
+                $plugin_files = array_keys($update_plugins->response);
+                if (!empty($items)) {
+                    $plugin_files = array_intersect($plugin_files, $items);
+                }
+
+                if (!empty($plugin_files)) {
+                    $skin = new Automatic_Upgrader_Skin();
+                    $upgrader = new Plugin_Upgrader($skin);
+                    $bulk_result = $upgrader->bulk_upgrade($plugin_files);
+
                     $all_plugins = get_plugins();
-                    $name = isset($all_plugins[$plugin_file]) ? $all_plugins[$plugin_file]['Name'] : $plugin_file;
-                    $results['plugins'][] = [
-                        'file'    => $plugin_file,
-                        'name'    => $name,
-                        'success' => !is_wp_error($result) && $result !== false,
-                        'error'   => is_wp_error($result) ? $result->get_error_message() : null,
-                    ];
+                    foreach ($plugin_files as $plugin_file) {
+                        $name = isset($all_plugins[$plugin_file]) ? $all_plugins[$plugin_file]['Name'] : $plugin_file;
+                        $plugin_result = isset($bulk_result[$plugin_file]) ? $bulk_result[$plugin_file] : null;
+                        $success = !is_wp_error($plugin_result) && !empty($plugin_result);
+                        $error = null;
+                        if (is_wp_error($plugin_result)) {
+                            $error = $plugin_result->get_error_message();
+                        } elseif (empty($plugin_result)) {
+                            $error = 'Update failed or not needed';
+                        }
+                        $results['plugins'][] = [
+                            'file'    => $plugin_file,
+                            'name'    => $name,
+                            'success' => $success,
+                            'error'   => $error,
+                        ];
+                    }
                 }
             }
         }
 
-        // Theme updates
+        // Theme updates — use bulk_upgrade for reliability
         if (in_array($type, ['all', 'themes'])) {
+            wp_update_themes();
             $update_themes = get_site_transient('update_themes');
             if (!empty($update_themes->response)) {
-                $upgrader = new Theme_Upgrader($skin);
-                foreach ($update_themes->response as $theme_slug => $theme_data) {
-                    if (!empty($items) && !in_array($theme_slug, $items)) {
-                        continue;
+                $theme_slugs = array_keys($update_themes->response);
+                if (!empty($items)) {
+                    $theme_slugs = array_intersect($theme_slugs, $items);
+                }
+
+                if (!empty($theme_slugs)) {
+                    $skin = new Automatic_Upgrader_Skin();
+                    $upgrader = new Theme_Upgrader($skin);
+                    $bulk_result = $upgrader->bulk_upgrade($theme_slugs);
+
+                    foreach ($theme_slugs as $theme_slug) {
+                        $theme_result = isset($bulk_result[$theme_slug]) ? $bulk_result[$theme_slug] : null;
+                        $success = !is_wp_error($theme_result) && !empty($theme_result);
+                        $error = null;
+                        if (is_wp_error($theme_result)) {
+                            $error = $theme_result->get_error_message();
+                        } elseif (empty($theme_result)) {
+                            $error = 'Update failed or not needed';
+                        }
+                        $results['themes'][] = [
+                            'slug'    => $theme_slug,
+                            'success' => $success,
+                            'error'   => $error,
+                        ];
                     }
-                    $result = $upgrader->upgrade($theme_slug);
-                    $results['themes'][] = [
-                        'slug'    => $theme_slug,
-                        'success' => !is_wp_error($result) && $result !== false,
-                        'error'   => is_wp_error($result) ? $result->get_error_message() : null,
-                    ];
                 }
             }
         }
+
+        // Force WordPress to re-check for remaining updates
+        delete_site_transient('update_plugins');
+        delete_site_transient('update_themes');
+        delete_site_transient('update_core');
+        wp_update_plugins();
+        wp_update_themes();
+        wp_version_check();
+
+        // Count remaining updates
+        $remaining_plugins = get_site_transient('update_plugins');
+        $remaining_themes  = get_site_transient('update_themes');
+        $remaining_core    = get_site_transient('update_core');
+
+        $plugins_remaining = !empty($remaining_plugins->response) ? count($remaining_plugins->response) : 0;
+        $themes_remaining  = !empty($remaining_themes->response) ? count($remaining_themes->response) : 0;
+        $core_remaining    = false;
+        if (!empty($remaining_core->updates)) {
+            foreach ($remaining_core->updates as $update) {
+                if ($update->response === 'upgrade') {
+                    $core_remaining = true;
+                    break;
+                }
+            }
+        }
+
+        $plugins_succeeded = count(array_filter($results['plugins'], function($p) { return $p['success']; }));
+        $plugins_failed    = count(array_filter($results['plugins'], function($p) { return !$p['success']; }));
+        $themes_succeeded  = count(array_filter($results['themes'], function($t) { return $t['success']; }));
+        $themes_failed     = count(array_filter($results['themes'], function($t) { return !$t['success']; }));
 
         return rest_ensure_response([
             'success'    => true,
             'results'    => $results,
+            'summary'    => [
+                'plugins_updated' => $plugins_succeeded,
+                'plugins_failed'  => $plugins_failed,
+                'themes_updated'  => $themes_succeeded,
+                'themes_failed'   => $themes_failed,
+                'core_updated'    => $results['core'] ? $results['core']['success'] : null,
+            ],
+            'remaining'  => [
+                'plugins_count' => $plugins_remaining,
+                'themes_count'  => $themes_remaining,
+                'core_update'   => $core_remaining,
+            ],
             'updated_at' => gmdate('c'),
         ]);
     }
