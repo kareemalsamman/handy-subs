@@ -313,15 +313,25 @@ const UserDetail = () => {
 
                     {/* WP Connection Status */}
                     {domain.wordpress_admin_url && status && status.status !== "loading" && (
-                      <div className={cn(
-                        "flex items-center gap-2 text-xs px-2 py-1.5 rounded",
-                        status.status === "connected" && "bg-green-500/10 text-green-500",
-                        status.status === "error" && "bg-red-500/10 text-red-500",
-                        status.status === "not_configured" && "bg-yellow-500/10 text-yellow-500",
-                      )}>
+                      <div
+                        className={cn(
+                          "flex items-center gap-2 text-xs px-2 py-1.5 rounded",
+                          status.status === "connected" && "bg-green-500/10 text-green-500 cursor-pointer hover:bg-green-500/20",
+                          status.status === "error" && "bg-red-500/10 text-red-500",
+                          status.status === "not_configured" && "bg-yellow-500/10 text-yellow-500",
+                        )}
+                        onClick={() => {
+                          if (status.status === "connected") {
+                            navigate(`/site-manager/${domain.id}`);
+                          }
+                        }}
+                      >
                         {status.status === "connected" && <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />}
                         {status.status === "error" && <XCircle className="h-3.5 w-3.5 shrink-0" />}
-                        <span>{status.message || (status.status === "not_configured" ? "WP not configured" : "")}</span>
+                        <span className="flex-1">{status.message || (status.status === "not_configured" ? "WP not configured" : "")}</span>
+                        {status.status === "connected" && (
+                          <span className="text-[10px] font-semibold opacity-70">Manage &rarr;</span>
+                        )}
                       </div>
                     )}
                     {!domain.wordpress_admin_url && (
